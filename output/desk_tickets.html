@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Customs: Agent Arcade — Desk Tickets (Homework 5, Problem 6)</title>
+<!--
+  Homework 5 — Problem 6: Plan the three tickets.
+  One standalone file: no server, CDN, remote font, image or audio file is used.
+
+  How to update this page in later problems:
+  - Each ticket's ACTUAL section is a <section class="actual" data-actual="101|102|103">.
+    Fill its <dd class="slot"> elements with results from a genuine agent run only.
+  - The Cash and Reflection tabs are <section id="panel-cash"> and <section id="panel-reflection">.
+  - Ticket facts below were read (read-only) from data/campus_customs_new.db; shop date 2026-08-31.
+  - Authentic audio clips you are allowed to use can be pasted into AUDIO_CLIPS (near the end of the script)
+    as data: URIs. Until then every sound is an original Web Audio synth placeholder.
+-->
+<style>
+  :root {
+    --bg: #09060d;
+    --bg-2: #120b19;
+    --panel: #170e20;
+    --panel-2: #1f1329;
+    --line: #3a2348;
+    --pink: #ff2e97;
+    --pink-soft: #ff8cc8;
+    --pink-deep: #6b1342;
+    --text: #f7ecf4;
+    --muted: #c4afc0;
+    --cyan: #4fe3ff;
+    --yellow: #ffd23f;
+    --green: #3ddc84;
+    --orange: #ff8a3d;
+    --red: #ff5468;
+    --purple: #b07cff;
+    --blue: #4d94ff;
+    --px: 4px;
+    --mono: "Consolas", "Lucida Console", "Courier New", ui-monospace, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0;
+    color: var(--text);
+    font: 16px/1.6 var(--sans);
+    background:
+      radial-gradient(1200px 500px at 50% -120px, rgba(255, 46, 151, .18), transparent 70%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.018) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 32px),
+      var(--bg);
+    min-height: 100vh;
+  }
+  /* Faint CRT scanlines; purely decorative. */
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px);
+    z-index: 50;
+  }
+  a { color: var(--pink-soft); }
+  code, .mono { font-family: var(--mono); }
+  .sr-only {
+    position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .skip { position: absolute; left: 12px; top: -60px; z-index: 100; background: var(--pink); color: #12000a;
+    padding: 8px 14px; font-weight: 700; text-decoration: none; }
+  .skip:focus { top: 12px; }
+  :focus-visible { outline: 3px solid var(--yellow); outline-offset: 3px; }
+
+  /* Pixel border: square, notched corners drawn with box-shadows (no border-radius anywhere). */
+  .pixel-box {
+    position: relative;
+    background: var(--panel);
+    margin: var(--px);
+    box-shadow:
+      0 calc(var(--px) * -1) 0 0 var(--bc, var(--line)),
+      0 var(--px) 0 0 var(--bc, var(--line)),
+      calc(var(--px) * -1) 0 0 0 var(--bc, var(--line)),
+      var(--px) 0 0 0 var(--bc, var(--line)),
+      0 0 0 0 transparent;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- Header / title screen ---------- */
+  .title-screen { padding: 36px 0 20px; text-align: center; }
+  .eyebrow { font-family: var(--mono); color: var(--muted); letter-spacing: .14em; text-transform: uppercase;
+    font-size: 13px; margin: 0 0 18px; }
+  h1.title { margin: 0; line-height: 1; }
+  .pixel-line { display: block; margin: 0 auto; height: auto; max-width: 100%; }
+  .pixel-line + .pixel-line { margin-top: 14px; }
+  .js .pixel-fallback { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .no-js .pixel-line { display: none; }
+  .pixel-fallback { font-family: var(--mono); font-size: clamp(28px, 5vw, 52px); color: var(--pink);
+    letter-spacing: .06em; text-shadow: 4px 4px 0 var(--pink-deep); }
+  .tagline { color: var(--muted); max-width: 720px; margin: 18px auto 0; }
+  .hud {
+    display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; align-items: center; margin-top: 24px;
+  }
+  .btn {
+    --bc: var(--pink);
+    font: 700 14px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text); background: var(--panel-2); border: 0; padding: 14px 18px; cursor: pointer;
+  }
+  .btn:hover { background: #2a1838; }
+  .btn-start { color: var(--yellow); --bc: var(--yellow); }
+  .btn-start .blink { animation: blink 1.1s steps(1, end) infinite; }
+  .btn-sound[aria-pressed="true"] { --bc: var(--green); color: var(--green); }
+  .btn-sound[aria-pressed="false"] { color: var(--pink-soft); }
+  .meta-strip { font: 13px/1.5 var(--mono); color: var(--muted); margin-top: 16px; }
+  .meta-strip strong { color: var(--text); }
+
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes enter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes march { to { background-position: 16px 0; } }
+  @keyframes hop { 0% { transform: translateY(0); } 40% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+
+  /* ---------- Section headings ---------- */
+  .section-title {
+    font: 700 clamp(18px, 2.4vw, 22px)/1.2 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--pink); text-shadow: 3px 3px 0 var(--pink-deep); margin: 40px 0 6px;
+  }
+  .section-sub { color: var(--muted); margin: 0 0 18px; }
+
+  /* ---------- Character select ---------- */
+  .roster { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; }
+  .card { --bc: var(--accent); padding: 16px 14px 14px; display: flex; flex-direction: column; gap: 10px;
+    transition: transform .15s steps(3); }
+  .card:hover, .card:focus-within { transform: translateY(-3px); }
+  .card[data-agent="mario"] { --accent: var(--red); }
+  .card[data-agent="crash"] { --accent: var(--orange); }
+  .card[data-agent="spyro"] { --accent: var(--purple); }
+  .card[data-agent="ryu"] { --accent: #f2f2f2; }
+  .card[data-agent="sonic"] { --accent: var(--blue); }
+  .portrait {
+    display: grid; place-items: center; width: 100%; aspect-ratio: 1 / 1; max-height: 150px;
+    background:
+      linear-gradient(180deg, transparent 70%, rgba(0,0,0,.35) 70%),
+      repeating-linear-gradient(45deg, rgba(255,255,255,.03) 0 6px, transparent 6px 12px),
+      var(--bg-2);
+    border: 0; cursor: pointer; padding: 8px; position: relative;
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent);
+  }
+  .portrait:hover { box-shadow: inset 0 0 0 3px var(--accent); }
+  .portrait svg { width: 96px; height: 96px; image-rendering: pixelated; animation: idle 1.6s steps(2, end) infinite; }
+  .card:nth-child(2) .portrait svg { animation-delay: -.3s; }
+  .card:nth-child(3) .portrait svg { animation-delay: -.6s; }
+  .card:nth-child(4) .portrait svg { animation-delay: -.9s; }
+  .card:nth-child(5) .portrait svg { animation-delay: -1.2s; }
+  .portrait.hop svg { animation: hop .35s steps(4, end) 1; }
+  .portrait .play-hint { position: absolute; right: 6px; bottom: 6px; font: 700 11px/1 var(--mono);
+    color: var(--accent); letter-spacing: .08em; }
+  .card h3 { margin: 0; font: 700 17px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent); }
+  .role { font: 700 12px/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text);
+    background: color-mix(in srgb, var(--accent) 22%, transparent); display: inline-block; padding: 3px 7px;
+    align-self: flex-start; }
+  .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .motif { font-size: 12.5px; font-family: var(--mono); color: color-mix(in srgb, var(--accent) 80%, white); }
+  .sfx-list { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+  .sfx {
+    width: 100%; text-align: left; font: 13px/1.3 var(--sans); color: var(--text); background: var(--bg-2);
+    border: 1px solid var(--line); padding: 7px 9px; cursor: pointer; display: flex; gap: 8px; align-items: baseline;
+  }
+  .sfx:hover { border-color: var(--accent); }
+  .sfx b { font-family: var(--mono); color: var(--accent); font-size: 12px; letter-spacing: .04em; white-space: nowrap; }
+  .sfx .preview-tag { margin-left: auto; font: 11px var(--mono); color: var(--muted); }
+
+  .dialog-box { --bc: var(--pink); margin-top: 22px; padding: 14px 18px; min-height: 64px; display: flex; gap: 14px;
+    align-items: center; font-family: var(--mono); }
+  .dialog-box .who { color: var(--pink); font-weight: 700; letter-spacing: .1em; white-space: nowrap; }
+  .dialog-box .cursor { display: inline-block; width: 10px; height: 16px; background: var(--pink); margin-left: 4px;
+    vertical-align: -2px; animation: blink .8s steps(1, end) infinite; }
+
+  /* ---------- Mission select (tabs) ---------- */
+  .tablist { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) repeat(2, minmax(0, .55fr)); gap: 14px; }
+  .tab {
+    --bc: var(--line);
+    text-align: left; color: var(--text); background: var(--panel); border: 0; cursor: pointer; padding: 14px 14px 12px;
+    font: 14px/1.35 var(--sans); display: flex; flex-direction: column; gap: 4px; min-height: 100%;
+  }
+  .tab .lvl { font: 700 12px/1 var(--mono); letter-spacing: .16em; color: var(--pink-soft); }
+  .tab .name { font: 700 15px/1.25 var(--mono); letter-spacing: .04em; }
+  .tab .tid { font: 12px var(--mono); color: var(--muted); }
+  .tab .stars { font: 12px var(--mono); color: var(--yellow); letter-spacing: .2em; }
+  .tab:hover { background: #22142e; }
+  .tab[aria-selected="true"] { --bc: var(--pink); background: linear-gradient(180deg, #2b0f22, var(--panel)); }
+  .tab[aria-selected="true"] .name::before { content: "▶ "; color: var(--pink); }
+  .tab.small .name { font-size: 14px; }
+
+  .panel { margin-top: 22px; }
+  .js .panel[hidden] { display: none; }
+  .js .panel.entering { animation: enter .28s steps(6, end); }
+  .no-js .panel { margin-top: 36px; }
+
+  .mission-head { --bc: var(--pink); padding: 18px 20px; display: flex; flex-wrap: wrap; gap: 14px 24px;
+    align-items: center; justify-content: space-between; }
+  .mission-head h2 { margin: 6px 0 0; font: 700 clamp(20px, 3vw, 28px)/1.15 var(--mono); letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text); text-shadow: 3px 3px 0 var(--pink-deep); }
+  .level-pixel { display: block; height: 22px; width: auto; }
+  .status-pill { font: 700 13px/1 var(--mono); letter-spacing: .12em; padding: 10px 12px; color: var(--cyan);
+    background: #0d1a20; box-shadow: inset 0 0 0 2px #1f5566; text-transform: uppercase; }
+  .status-pill small { display: block; font-weight: 400; color: var(--muted); letter-spacing: .04em; margin-top: 5px;
+    text-transform: none; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+  .block { padding: 16px 18px; }
+  .block h3 { margin: 0 0 10px; font: 700 14px/1.2 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--pink-soft); }
+  dl.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0; font-size: 14.5px; }
+  dl.kv dt { color: var(--muted); font-family: var(--mono); font-size: 13px; padding-top: 1px; }
+  dl.kv dd { margin: 0; }
+  ul.facts { margin: 0; padding-left: 18px; font-size: 14.5px; }
+  ul.facts li { margin: 3px 0; }
+  ul.facts li::marker { content: "■  "; color: var(--pink); font-size: 10px; }
+  .source { margin: 10px 0 0; font: 12px/1.5 var(--mono); color: var(--muted); }
+
+  /* ---------- Alerts ---------- */
+  .alerts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; align-items: center; }
+  .alerts-label { font: 700 12px var(--mono); letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+  .alert {
+    --c: var(--muted);
+    display: inline-flex; align-items: center; gap: 8px; padding: 8px 11px; font: 700 12.5px/1 var(--mono);
+    letter-spacing: .08em; text-transform: uppercase; color: var(--c); background: color-mix(in srgb, var(--c) 12%, #0b070f);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c) 70%, transparent); border: 0;
+  }
+  button.alert { cursor: pointer; }
+  .alert .ico { width: 10px; height: 10px; background: var(--c); flex: none; }
+  .alert .src { font-weight: 400; color: var(--text); opacity: .85; letter-spacing: .02em; text-transform: none; }
+  .alert--shortage { --c: var(--orange); }
+  .alert--overdue { --c: var(--red); }
+  .alert--approval { --c: var(--pink); }
+  .alert--awaiting { --c: var(--yellow); }
+  .alert--completed { --c: var(--green); }
+  .alert--resolved { --c: #ffe27a; }
+  .alert--approval .ico, .alert--overdue .ico { animation: blink 1.2s steps(1, end) infinite; }
+  .alert.locked { opacity: .55; }
+  .alert.locked .ico { animation: none; background: transparent; box-shadow: inset 0 0 0 2px var(--c); }
+
+  details.legend { margin-top: 18px; }
+  details.legend summary { cursor: pointer; font: 700 13px var(--mono); letter-spacing: .12em; color: var(--pink-soft);
+    text-transform: uppercase; }
+  .legend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 18px;
+    margin-top: 12px; }
+  .legend-grid p { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; }
+
+  /* ---------- Progress track ---------- */
+  .track { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 18px; }
+  .stage { padding: 10px 10px 9px; background: var(--bg-2); box-shadow: inset 0 0 0 2px var(--line); font-size: 13px; }
+  .stage .bar { height: 10px; margin-bottom: 8px; background: repeating-linear-gradient(90deg, #2a1d33 0 6px, transparent 6px 8px); }
+  .stage.done .bar { background: repeating-linear-gradient(90deg, var(--pink) 0 6px, transparent 6px 8px); }
+  .stage b { display: block; font: 700 12px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+  .stage span { color: var(--muted); }
+  .stage.done b { color: var(--pink-soft); }
+
+  /* ---------- Expected vs Actual ---------- */
+  .versus { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 22px; margin-top: 22px;
+    align-items: start; }
+  .expected { --bc: var(--pink); padding: 20px; }
+  .actual { --bc: #4a3a55; padding: 20px; background:
+    repeating-linear-gradient(-45deg, rgba(255,255,255,.025) 0 10px, transparent 10px 20px), var(--panel); }
+  .vs-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 14px; }
+  .vs-head h3 { margin: 0; font: 700 20px/1 var(--mono); letter-spacing: .16em; color: var(--pink); text-transform: uppercase;
+    text-shadow: 3px 3px 0 var(--pink-deep); }
+  .actual .vs-head h3 { color: #d9c9e0; text-shadow: 3px 3px 0 #2c1f35; }
+  .vs-head p { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+  .first-call { display: flex; gap: 14px; align-items: center; padding: 12px 14px; background: #24101d;
+    box-shadow: inset 0 0 0 2px var(--pink-deep); margin-bottom: 16px; }
+  .first-call .mini { width: 56px; height: 56px; }
+  .first-call .k { font: 700 12px var(--mono); letter-spacing: .14em; color: var(--pink-soft); text-transform: uppercase; }
+  .first-call .v { font: 700 17px/1.3 var(--mono); }
+
+  .narrative { margin: 0 0 18px; padding: 14px 16px; border-left: 4px solid var(--pink); background: #140b19;
+    font-size: 16px; }
+  .label { font: 700 12.5px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--pink-soft);
+    margin: 18px 0 6px; }
+  .plain { margin: 0; }
+
+  /* ---------- Command network (expected plan now; real events in a later problem) ---------- */
+  .network-block { --bc: var(--pink); margin-top: 22px; padding: 18px 20px 20px; }
+  .net-head { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: flex-start; justify-content: space-between; }
+  .net-head h3 { margin: 0; font: 700 16px/1.2 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--pink);
+    text-shadow: 2px 2px 0 var(--pink-deep); }
+  .net-head p { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; }
+  .btn-mini { font: 700 12.5px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--yellow);
+    background: #1c1608; border: 0; box-shadow: inset 0 0 0 2px #7a6113; padding: 9px 12px; cursor: pointer; text-align: left; }
+  .btn-mini small { display: block; font-weight: 400; color: var(--muted); letter-spacing: .04em; text-transform: none; }
+  .btn-mini:hover { box-shadow: inset 0 0 0 2px var(--yellow); }
+  .btn-mini[disabled] { opacity: .55; cursor: default; }
+  .js .net-routes, .js .net-out { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .net-routes { margin: 12px 0 0; padding-left: 20px; font-size: 14.5px; }
+  .net-grid { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 18px; margin-top: 14px; align-items: start; }
+  .net-grid > * { min-width: 0; }
+  .net-scroll { overflow-x: auto; overflow-y: hidden; padding: 4px; }
+  .net-stage { position: relative; container-type: inline-size; aspect-ratio: 1000 / 510; min-width: 560px;
+    background:
+      radial-gradient(circle at 50% 18%, rgba(255,46,151,.10), transparent 45%),
+      repeating-linear-gradient(0deg, rgba(79,227,255,.035) 0 1px, transparent 1px 24px),
+      repeating-linear-gradient(90deg, rgba(79,227,255,.035) 0 1px, transparent 1px 24px),
+      #0c0811;
+    box-shadow: inset 0 0 0 2px var(--line); }
+  .net-stage.tall { aspect-ratio: 1000 / 600; }
+  .net-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: visible; }
+  .demo-banner { position: absolute; left: 10px; top: 10px; z-index: 4; margin: 0; font: 700 11px/1 var(--mono);
+    letter-spacing: .14em; color: #1c1608; background: var(--yellow); padding: 6px 9px; text-transform: uppercase; }
+  .demo-banner[hidden] { display: none; }
+
+  .node { --accent: var(--pink); position: absolute; z-index: 2; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .25cqw;
+    background: var(--panel); border: 0; color: var(--text); cursor: pointer; padding: .6cqw .4cqw;
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--accent) 70%, transparent), 0 0 0 3px #0c0811;
+    transition: opacity .2s, filter .2s; }
+  .node[data-agent="mario"] { --accent: var(--red); }
+  .node[data-agent="crash"] { --accent: var(--orange); }
+  .node[data-agent="spyro"] { --accent: var(--purple); }
+  .node[data-agent="ryu"] { --accent: #f2f2f2; }
+  .node[data-agent="sonic"] { --accent: var(--blue); }
+  .node:hover, .node.selected { box-shadow: inset 0 0 0 3px var(--accent), 0 0 0 3px #0c0811, 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent); }
+  .node .node-sprite svg { width: max(34px, 6.4cqw); height: max(34px, 6.4cqw); display: block; image-rendering: pixelated;
+    animation: idle 1.6s steps(2, end) infinite; }
+  .node[data-agent="mario"] .node-sprite svg { width: max(40px, 7.4cqw); height: max(40px, 7.4cqw); }
+  .node-name { font: 700 max(10.5px, 1.45cqw)/1.1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+  .node-role { font: max(9.5px, 1.15cqw)/1.15 var(--mono); color: var(--muted); letter-spacing: .04em; }
+  .node-tag, .node-tool { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap;
+    font: 700 max(9px, 1.05cqw)/1 var(--mono); letter-spacing: .08em; padding: .35cqw .5cqw; text-transform: uppercase; }
+  .node-tag { bottom: calc(-1 * max(14px, 1.9cqw)); color: var(--muted); background: #0c0811; box-shadow: inset 0 0 0 1px var(--line); }
+  .node-tool { top: calc(-1 * max(14px, 1.9cqw)); color: var(--cyan); background: #0c1b21; box-shadow: inset 0 0 0 1px #1f5566; text-transform: none; }
+  .node-tag[hidden], .node-tool[hidden] { display: none; }
+  .gate-badge { position: absolute; top: -.9cqw; right: -.9cqw; width: max(18px, 2.4cqw); height: max(18px, 2.4cqw); }
+  .gate-badge svg { width: 100%; height: 100%; display: block; }
+  .gate-badge[hidden] { display: none; }
+  /* Node states */
+  .node.n-out { opacity: .32; filter: grayscale(1); }
+  .node.n-out .node-sprite svg { animation: none; }
+  .node.n-working { box-shadow: inset 0 0 0 3px var(--accent), 0 0 0 3px #0c0811, 0 0 0 6px var(--accent); animation: glow 1s steps(2, end) infinite; }
+  .node.n-done::after { content: "✓"; position: absolute; top: 4px; left: 6px; font: 700 max(12px, 1.6cqw) var(--mono); color: var(--green); }
+  .node.n-waiting .gate-badge { animation: blink 1s steps(1, end) infinite; }
+  @keyframes glow { 50% { box-shadow: inset 0 0 0 3px var(--accent), 0 0 0 3px #0c0811, 0 0 0 9px color-mix(in srgb, var(--accent) 40%, transparent); } }
+
+  /* Connection states (shared by the network and the legend specimens) */
+  .edge .line { fill: none; stroke-width: 4; stroke-linecap: butt; stroke-linejoin: miter; }
+  .edge .hit { fill: none; stroke: transparent; stroke-width: 22; pointer-events: stroke; cursor: pointer; }
+  .edge .head, .edge .pulse, .edge .lock { display: none; }
+  .edge .badge rect { fill: var(--pink); }
+  .edge .badge text { font: 700 15px var(--mono); fill: #1a0010; text-anchor: middle; dominant-baseline: central; }
+  .edge .cond-label { font: 700 13px var(--mono); fill: var(--yellow); text-anchor: middle; letter-spacing: .08em; }
+  .edge.conditional .badge rect { fill: var(--yellow); }
+  .edge.s-idle .line { stroke: #3d2a4a; stroke-dasharray: 2 7; }
+  .edge.s-none .line { stroke: #2a1c33; stroke-dasharray: 2 9; opacity: .45; }
+  .edge.s-idle .badge, .edge.s-none .badge, .edge.s-idle .cond-label, .edge.s-none .cond-label { display: none; }
+  .edge.s-expected .line { stroke: var(--pink); stroke-dasharray: 12 8; filter: drop-shadow(0 0 3px rgba(255,46,151,.75));
+    animation: dash 2.4s linear infinite; }
+  .edge.s-expected .head { display: block; fill: var(--pink); }
+  .edge.conditional.s-expected .line { stroke: var(--yellow); stroke-dasharray: 3 7; filter: drop-shadow(0 0 3px rgba(255,210,63,.6)); }
+  .edge.conditional.s-expected .head { fill: var(--yellow); }
+  .edge.s-active .line { stroke: #fff; stroke-width: 5; stroke-dasharray: none; filter: drop-shadow(0 0 6px var(--pink)) drop-shadow(0 0 2px #fff); }
+  .edge.s-active .head { display: block; fill: #fff; }
+  .edge.s-active .pulse { display: block; fill: #fff; filter: drop-shadow(0 0 6px var(--pink)); }
+  .edge.s-completed .line { stroke: var(--edge-color, var(--green)); stroke-dasharray: none; }
+  .edge.s-completed .head { display: block; fill: var(--edge-color, var(--green)); }
+  .edge.s-awaiting .line { stroke: var(--yellow); stroke-dasharray: none; }
+  .edge.s-awaiting .head { display: block; fill: var(--yellow); }
+  .edge.s-awaiting .lock { display: block; animation: lockpulse 1.4s ease-in-out infinite; }
+  .edge.s-error .line, .edge.flash-error .line { stroke: var(--red) !important; stroke-dasharray: none; filter: drop-shadow(0 0 5px var(--red)); }
+  .edge.s-error .head, .edge.flash-error .head { display: block; fill: var(--red); }
+  .edge.flash-error .line { animation: errflash .3s steps(2, end) 3; }
+  .edge.missed .line { stroke: var(--red); opacity: .7; }
+  .edge.unexpected .line { stroke: var(--cyan); filter: drop-shadow(0 0 4px var(--cyan)); }
+  .edge.unexpected .head { fill: var(--cyan); }
+  .edge:focus { outline: none; }
+  .edge:focus-visible .hit, .edge.selected .hit { stroke: rgba(255, 210, 63, .22); }
+  @keyframes dash { to { stroke-dashoffset: -40; } }
+  @keyframes errflash { 50% { opacity: .2; } }
+  @keyframes lockpulse { 50% { opacity: .35; } }
+
+  .net-side { display: grid; gap: 14px; }
+  .net-info { padding: 14px 16px; background: var(--bg-2); box-shadow: inset 0 0 0 2px var(--line); min-height: 230px; font-size: 14px; }
+  .net-info h4 { margin: 0 0 8px; font: 700 14px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--pink-soft); }
+  .net-info p { margin: 6px 0 0; }
+  .net-info b { font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .net-info .hint { color: var(--muted); }
+  .net-legend { grid-column: 1 / -1; padding: 12px 14px; background: var(--bg-2); box-shadow: inset 0 0 0 2px var(--line); }
+  .net-legend h4 { margin: 0 0 8px; font: 700 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .net-legend ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px 18px; }
+  .net-legend li { display: grid; grid-template-columns: 74px 1fr auto; gap: 8px; align-items: center; font-size: 12.5px; }
+  .net-legend svg { width: 74px; height: 18px; overflow: visible; }
+  .net-legend .flash { font: 700 10.5px var(--mono); color: var(--red); background: none; border: 1px solid #6b1e29; padding: 2px 6px; cursor: pointer; }
+  .net-legend .demo-note { margin: 8px 0 0; font-size: 11.5px; color: var(--muted); }
+  .scroll-hint { display: none; margin: 6px 0 0; font: 12px var(--mono); color: var(--muted); }
+
+  .tools { display: flex; flex-wrap: wrap; gap: 6px 4px; align-items: center; }
+  .tools code { color: var(--cyan); background: #0c1b21; padding: 4px 8px; box-shadow: inset 0 0 0 1px #1f5566;
+    font-size: 13px; }
+
+  .gate { margin-top: 18px; display: grid; grid-template-columns: 86px 1fr; gap: 14px; align-items: center;
+    padding: 14px; background: #1a0c17; box-shadow: inset 0 0 0 2px var(--pink); }
+  .gate svg { width: 86px; height: 86px; }
+  .gate .k { font: 700 13px var(--mono); letter-spacing: .14em; color: var(--pink); text-transform: uppercase; }
+  .gate p { margin: 4px 0 0; }
+  .gate .note { font-size: 13px; color: var(--muted); }
+  .guardrail { margin-top: 14px; padding: 10px 14px; font-size: 14.5px; background: #1c1608;
+    box-shadow: inset 0 0 0 2px #5c4a12; }
+  .guardrail b { font-family: var(--mono); color: var(--yellow); letter-spacing: .1em; font-size: 12px; text-transform: uppercase; }
+
+  .actual .insert { text-align: center; font: 700 15px var(--mono); letter-spacing: .2em; color: var(--muted);
+    padding: 18px 0 16px; text-transform: uppercase; }
+  .actual .insert span { animation: blink 1.4s steps(1, end) infinite; }
+  dl.slots { margin: 0; display: grid; gap: 10px; }
+  dl.slots dt { font: 700 12px var(--mono); letter-spacing: .12em; color: #b8a6c2; text-transform: uppercase; }
+  dl.slots dd.slot { margin: 4px 0 0; min-height: 46px; background: #0f0a14; box-shadow: inset 0 0 0 2px #2f2338;
+    background-image: repeating-linear-gradient(90deg, transparent 0 8px, rgba(255,255,255,.03) 8px 9px); }
+
+  /* Cash / Reflection placeholders */
+  .later { --bc: var(--line); padding: 56px 20px; text-align: center; }
+  .later h2 { margin: 0 0 12px; font: 700 26px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--pink); }
+  .later p { margin: 0; font: 700 16px var(--mono); letter-spacing: .1em; color: var(--muted); }
+
+  footer { margin: 48px 0 40px; color: var(--muted); font-size: 13.5px; }
+  footer p { margin: 6px 0; }
+
+  .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 60; background: var(--panel-2);
+    color: var(--text); padding: 12px 16px; font: 13px var(--mono); box-shadow: 0 0 0 3px var(--pink); opacity: 0;
+    pointer-events: none; transition: opacity .2s; max-width: calc(100vw - 40px); }
+  .toast.show { opacity: 1; }
+
+  /* ---------- Problem 9: filled Actual sections and Cash tab ---------- */
+  .actual.filled { --bc: var(--cyan); }
+  .actual.filled .vs-head h3 { color: var(--cyan); text-shadow: 3px 3px 0 #0c3640; }
+  dl.slots dd.slot.filled { padding: 9px 11px; font-size: 14px; min-height: 0; background: #0d0a12; }
+  dd.slot ol, dd.slot ul { margin: 0; padding-left: 18px; }
+  dd.slot li { margin: 2px 0; }
+  dd.slot code { color: var(--cyan); font-size: 12.5px; }
+  .ok-tag { color: var(--green); font-weight: 700; }
+  .warn-tag { color: var(--yellow); font-weight: 700; }
+  .bad-tag { color: var(--red); font-weight: 700; }
+  .actual-network { margin-top: 16px; }
+  .run-note { margin: 10px 0 0; padding: 9px 11px; font-size: 13.5px; background: #1c1608; box-shadow: inset 0 0 0 2px #5c4a12; }
+  .cash-board { --bc: var(--yellow); padding: 22px; }
+  .cash-board h2 { margin: 0 0 6px; font: 700 22px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--yellow); }
+  .cash-board .lead { color: var(--muted); margin: 0 0 16px; }
+  .cash-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+  .cash-figures div { padding: 12px 14px; background: #1c1608; box-shadow: inset 0 0 0 2px #6b5410; }
+  .cash-figures b { display: block; font: 700 12px var(--mono); letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+  .cash-figures span { font: 700 24px var(--mono); color: var(--yellow); }
+  table.ledger { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.ledger th, table.ledger td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.ledger th { font: 700 12px var(--mono); letter-spacing: .1em; color: var(--pink-soft); text-transform: uppercase; }
+  table.ledger td.num { text-align: right; font-family: var(--mono); white-space: nowrap; }
+  .recon { margin-top: 16px; padding: 12px 14px; background: #0c1a12; box-shadow: inset 0 0 0 2px #1d6b43; font-family: var(--mono); font-size: 14px; }
+  .ledger-scroll { overflow-x: auto; }
+  /* ---------- Problem 10: Reflection tab ---------- */
+  .reflection-board { --bc: var(--purple); padding: 26px clamp(18px, 4vw, 44px); max-width: 920px; margin-left: auto; margin-right: auto; }
+  .reflection-board h2 { margin: 0; font: 700 clamp(20px, 3vw, 26px)/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+    color: var(--pink); text-shadow: 3px 3px 0 var(--pink-deep); }
+  .reflection-board .refl-sub { margin: 6px 0 18px; font: 700 14px var(--mono); letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+  .reflection-board h3 { margin: 28px 0 10px; font: 700 15px/1.35 var(--mono); letter-spacing: .08em; color: var(--yellow); }
+  .reflection-board p { margin: 0 0 14px; font-size: 16px; line-height: 1.7; }
+  .reflection-board code { color: var(--cyan); background: #0c1b21; padding: 1px 6px; font-size: 14px; }
+  .reflection-board .refl-author { margin-top: 24px; color: var(--muted); font-size: 13.5px; }
+  @media (max-width: 960px) {
+    .versus, .grid-2, .net-grid { grid-template-columns: minmax(0, 1fr); }
+    .net-legend ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tablist { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .tab.small { grid-column: span 1; }
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 0 14px; }
+    .tablist { grid-template-columns: 1fr 1fr; }
+    .tab:first-child { grid-column: 1 / -1; }
+    .track { grid-template-columns: 1fr 1fr; }
+    dl.kv { grid-template-columns: 1fr; gap: 0 0; }
+    dl.kv dd { margin-bottom: 8px; }
+    .gate { grid-template-columns: 1fr; justify-items: start; }
+    .dialog-box { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .net-legend ul { grid-template-columns: 1fr; }
+    .cash-figures { grid-template-columns: 1fr; }
+    .scroll-hint { display: block; }
+    .network-block { padding: 14px 12px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#missions">Skip to the mission tabs</a>
+
+<header class="title-screen wrap">
+  <p class="eyebrow">Yale SOM · AI Foundations · Homework 5 · Problem 6: Plan the three tickets</p>
+  <h1 class="title">
+    <span class="pixel-fallback">CAMPUS CUSTOMS: AGENT ARCADE</span>
+    <span id="title-pixels" aria-hidden="true"></span>
+  </h1>
+  <p class="tagline">Five agents, three open tickets. This page shows what we <strong>expect</strong> the team to do on each
+    ticket before any agent runs. <!-- P9:tagline -->The <strong>Actual</strong> side now shows the genuine Problem 9 run, drawn from the audit trail and the database.<!-- /P9:tagline --></p>
+  <div class="hud">
+    <button type="button" class="btn btn-start pixel-box" id="press-start"><span class="blink">Press Start</span></button>
+    <button type="button" class="btn btn-sound pixel-box" id="sound-toggle" aria-pressed="false">Sound: Off</button>
+  </div>
+  <p class="meta-strip">Shop date <strong>2026-08-31</strong> · Facts read (read-only) from
+    <code>data/campus_customs_new.db</code> · <!-- P9:meta-status -->Database status after the Problem 9 run: <strong>101 resolved (administrative), 102 resolved (operational), 103 resolved (administrative)</strong> · checking $160.00<!-- /P9:meta-status --></p>
+</header>
+
+<main class="wrap" id="main">
+
+  <!-- ======================= CHARACTER SELECT ======================= -->
+  <section aria-labelledby="roster-title">
+    <h2 class="section-title" id="roster-title">Character Select</h2>
+    <p class="section-sub">The five PydanticAI agents, each played by a character. Click a portrait (or a sound) to preview it.
+      Sound starts muted.</p>
+
+    <div class="roster">
+      <article class="card pixel-box" data-agent="mario" aria-labelledby="c-mario">
+        <button type="button" class="portrait" data-sound="mario.intro" data-line="mario"
+          aria-label="Mario, Boss agent. Play his introduction.">
+          <span class="sprite" data-sprite="mario"></span><span class="play-hint" aria-hidden="true">▶ 1P</span>
+        </button>
+        <h3 id="c-mario">Mario</h3>
+        <span class="role">Boss</span>
+        <p>Team commander and mission coordinator. Decides which specialist to call first, delegates tasks, and
+          coordinates the overall ticket resolution.</p>
+        <span class="motif">★ Commander · coins</span>
+        <ul class="sfx-list" aria-label="Mario sounds">
+          <li><button type="button" class="sfx" data-sound="mario.intro" data-line="mario"><b>INTRO</b> “It's-a me, Mario!”</button></li>
+          <li><button type="button" class="sfx" data-sound="mario.coin"><b>COIN</b> Task assigned</button></li>
+          <li><button type="button" class="sfx" data-sound="mario.fanfare"><b>FANFARE</b> Mission complete<span class="preview-tag">preview</span></button></li>
+        </ul>
+      </article>
+
+      <article class="card pixel-box" data-agent="crash" aria-labelledby="c-crash">
+        <button type="button" class="portrait" data-sound="crash.woah" data-line="crash"
+          aria-label="Crash Bandicoot, Inventory agent. Play his shortage sound.">
+          <span class="sprite" data-sprite="crash"></span><span class="play-hint" aria-hidden="true">▶ 2P</span>
+        </button>
+        <h3 id="c-crash">Crash Bandicoot</h3>
+        <span class="role">Inventory</span>
+        <p>Inventory and supplier specialist. Checks stock, identifies shortages, and investigates restocking problems.</p>
+        <span class="motif">▣ Crates · warehouse boxes</span>
+        <ul class="sfx-list" aria-label="Crash Bandicoot sounds">
+          <li><button type="button" class="sfx" data-sound="crash.woah" data-line="crash"><b>WOAH!</b> Inventory shortage</button></li>
+          <li><button type="button" class="sfx" data-sound="crash.crate"><b>CRATE</b> Checking inventory</button></li>
+          <li><button type="button" class="sfx" data-sound="crash.fruit"><b>FRUIT</b> Inventory check succeeded<span class="preview-tag">preview</span></button></li>
+        </ul>
+      </article>
+
+      <article class="card pixel-box" data-agent="spyro" aria-labelledby="c-spyro">
+        <button type="button" class="portrait" data-sound="spyro.gem" data-line="spyro"
+          aria-label="Spyro, Accounting agent. Play his gem chime.">
+          <span class="sprite" data-sprite="spyro"></span><span class="play-hint" aria-hidden="true">▶ 3P</span>
+        </button>
+        <h3 id="c-spyro">Spyro</h3>
+        <span class="role">Accounting</span>
+        <p>Financial analyst and treasure keeper. Checks balances, reviews invoices, evaluates discounts, and prepares
+          approval requests.</p>
+        <span class="motif">◆ Gems · treasure · balances</span>
+        <ul class="sfx-list" aria-label="Spyro sounds">
+          <li><button type="button" class="sfx" data-sound="spyro.gem" data-line="spyro"><b>GEM</b> Financial check</button></li>
+          <li><button type="button" class="sfx" data-sound="spyro.approval"><b>ALERT</b> Human approval needed</button></li>
+          <li><button type="button" class="sfx" data-sound="spyro.treasure"><b>TREASURE</b> Authorized task done<span class="preview-tag">preview</span></button></li>
+        </ul>
+      </article>
+
+      <article class="card pixel-box" data-agent="ryu" aria-labelledby="c-ryu">
+        <button type="button" class="portrait" data-sound="ryu.hadouken" data-line="ryu"
+          aria-label="Ryu, Facilities agent. Play his Hadouken sound.">
+          <span class="sprite" data-sprite="ryu"></span><span class="play-hint" aria-hidden="true">▶ 4P</span>
+        </button>
+        <h3 id="c-ryu">Ryu</h3>
+        <span class="role">Facilities</span>
+        <p>Facilities and building operations specialist. Verifies lease details, investigates rent notices, and
+          coordinates with Accounting when a facilities issue requires payment.</p>
+        <span class="motif">✦ Fighting-game mission cards</span>
+        <ul class="sfx-list" aria-label="Ryu sounds">
+          <li><button type="button" class="sfx" data-sound="ryu.hadouken" data-line="ryu"><b>HADOUKEN!</b> Facilities action</button></li>
+          <li><button type="button" class="sfx" data-sound="ryu.impact"><b>IMPACT</b> Problem found</button></li>
+          <li><button type="button" class="sfx" data-sound="ryu.victory"><b>VICTORY</b> Facilities task done<span class="preview-tag">preview</span></button></li>
+        </ul>
+      </article>
+
+      <article class="card pixel-box" data-agent="sonic" aria-labelledby="c-sonic">
+        <button type="button" class="portrait" data-sound="sonic.ring" data-line="sonic"
+          aria-label="Sonic, Customer Service agent. Play his ring sound.">
+          <span class="sprite" data-sprite="sonic"></span><span class="play-hint" aria-hidden="true">▶ 5P</span>
+        </button>
+        <h3 id="c-sonic">Sonic</h3>
+        <span class="role">Customer Service</span>
+        <p>Customer communication specialist. Prepares accurate customer responses based on information confirmed by
+          other agents.</p>
+        <span class="motif">○ Rings · speed lines · messages</span>
+        <ul class="sfx-list" aria-label="Sonic sounds">
+          <li><button type="button" class="sfx" data-sound="sonic.ring" data-line="sonic"><b>RING</b> Response prepared</button></li>
+          <li><button type="button" class="sfx" data-sound="sonic.warn"><b>BEEP-BEEP</b> Info missing</button></li>
+          <li><button type="button" class="sfx" data-sound="sonic.complete"><b>SENT</b> Communication complete<span class="preview-tag">preview</span></button></li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="dialog-box pixel-box" aria-hidden="true">
+      <span class="who" id="dialog-who">SYSTEM</span>
+      <span><span id="dialog-text">Choose a character to hear their intro. Sound is off until you turn it on.</span><span class="cursor"></span></span>
+    </div>
+    <p class="sr-only" aria-live="polite" id="live"></p>
+  </section>
+
+  <!-- ======================= MISSION SELECT ======================= -->
+  <section id="missions" aria-labelledby="missions-title">
+    <h2 class="section-title" id="missions-title">Mission Select</h2>
+    <p class="section-sub">Each open ticket is a level. Use the arrow keys to move between tabs.</p>
+
+    <div class="tablist" role="tablist" aria-label="Desk tickets">
+      <button type="button" class="tab pixel-box" role="tab" id="tab-101" aria-controls="panel-101" aria-selected="true">
+        <span class="lvl">LEVEL 101</span><span class="name">Ticket 101</span>
+        <span class="tid">Operation Missing Tee</span><span class="stars" aria-hidden="true">■■■■</span>
+      </button>
+      <button type="button" class="tab pixel-box" role="tab" id="tab-102" aria-controls="panel-102" aria-selected="false" tabindex="-1">
+        <span class="lvl">LEVEL 102</span><span class="name">Ticket 102</span>
+        <span class="tid">Operation Keep the Lights On</span><span class="stars" aria-hidden="true">■■■■</span>
+      </button>
+      <button type="button" class="tab pixel-box" role="tab" id="tab-103" aria-controls="panel-103" aria-selected="false" tabindex="-1">
+        <span class="lvl">LEVEL 103</span><span class="name">Ticket 103</span>
+        <span class="tid">Operation Hoodie Negotiation</span><span class="stars" aria-hidden="true">■■■■</span>
+      </button>
+      <button type="button" class="tab small pixel-box" role="tab" id="tab-cash" aria-controls="panel-cash" aria-selected="false" tabindex="-1">
+        <span class="lvl">BONUS</span><span class="name">Cash</span><span class="tid">Problem 9 ledger</span>
+      </button>
+      <button type="button" class="tab small pixel-box" role="tab" id="tab-reflection" aria-controls="panel-reflection" aria-selected="false" tabindex="-1">
+        <span class="lvl">BONUS</span><span class="name">Reflection</span><span class="tid">Problem 10</span>
+      </button>
+    </div>
+
+    <details class="legend">
+      <summary>Mission alert guide</summary>
+      <div class="legend-grid">
+        <div><span class="alert alert--shortage"><span class="ico"></span>Inventory shortage</span>
+          <p>Stock on hand is below what the ticket asks for.</p></div>
+        <div><span class="alert alert--overdue"><span class="ico"></span>Invoice overdue</span>
+          <p>A vendor invoice is open past its due date.</p></div>
+        <div><span class="alert alert--approval"><span class="ico"></span>Human approval required</span>
+          <p>Money or a discount is involved. A person must approve before anything happens.</p></div>
+        <div><span class="alert alert--awaiting"><span class="ico"></span>Awaiting approval</span>
+          <p>A request has been filed and is waiting for a human. Only shown when the database says so.</p></div>
+        <div><span class="alert alert--completed"><span class="ico"></span>Task completed</span>
+          <p>An agent's part of the mission is finished. Only shown from a genuine run.</p></div>
+        <div><span class="alert alert--resolved"><span class="ico"></span>Mission resolved</span>
+          <p>The ticket is resolved. Only shown when the database status is resolved.</p></div>
+      </div>
+    </details>
+
+    <!-- ======================= TICKET 101 ======================= -->
+    <section class="panel" role="tabpanel" id="panel-101" aria-labelledby="tab-101" tabindex="0">
+      <header class="mission-head pixel-box">
+        <div>
+          <span class="level-pixel" data-pixel="LEVEL 101" aria-hidden="true"></span>
+          <h2>Operation Missing Tee</h2>
+        </div>
+        <!-- P9:pill-101 --><div class="status-pill" role="status">DB status: resolved<small>Ticket 101 · administrative resolution</small></div><!-- /P9:pill-101 -->
+      </header>
+
+      <div class="grid-2">
+        <div class="block pixel-box">
+          <h3>Official ticket</h3>
+          <dl class="kv">
+            <dt>Ticket ID</dt><dd>101</dd>
+            <dt>Type</dt><dd><code>customer_order</code></dd>
+            <dt>Requester</dt><dd>Tauhid Zaman</dd>
+            <dt>Subject</dt><dd>Bulldog tee</dd>
+            <dt>Item</dt><dd><code>CC-TEE-WHITE</code>, size S, qty 1</dd>
+            <dt>Linked invoice</dt><dd>501</dd>
+            <dt>Notes</dt><dd>Needs a tee in size S.</dd>
+            <dt>Created</dt><dd>2026-08-31T09:15:00-04:00</dd>
+            <dt>Status at start</dt><dd>open</dd>
+          </dl>
+        </div>
+        <div class="block pixel-box">
+          <h3>Database facts</h3>
+          <ul class="facts">
+            <li>Classic Bulldog Tee, size S: <strong>0 on hand</strong> (Aisle B).</li>
+            <li>List price $28.00; unit cost $8.00.</li>
+            <li>Invoice 501, Bulldog Print Co: <strong>$840.00, open</strong>, due 2026-08-28
+              (3 days overdue on 2026-08-31). Description: “Rush reprint CC-TEE-WHITE S”.</li>
+            <li>Bulldog Print Co lead time: 5 days.</li>
+            <li>Checking balance: $3,400.00.</li>
+          </ul>
+          <p class="source">Tables: tickets, inventory, pricing, invoices, vendors, cash_accounts, desk.</p>
+        </div>
+      </div>
+
+      <div class="alerts">
+        <span class="alerts-label">Alerts</span>
+        <button type="button" class="alert alert--shortage" data-sound="crash.woah" data-line="crash-shortage-101">
+          <span class="ico"></span>Inventory shortage <span class="src">· database: 0 of 1</span></button>
+        <button type="button" class="alert alert--overdue" data-sound="ryu.impact" data-line="overdue-101">
+          <span class="ico"></span>Invoice overdue <span class="src">· database: 501, 3 days</span></button>
+        <button type="button" class="alert alert--approval" data-sound="spyro.approval" data-line="approval-101">
+          <span class="ico"></span>Human approval required <span class="src">· plan</span></button>
+      </div>
+
+      <!-- P9:track-101 --><div class="track" aria-label="Mission progress: 4 of 4 stages">
+        <div class="stage done"><div class="bar"></div><b>1 · Plan written</b><span>Expected section below</span></div>
+        <div class="stage done"><div class="bar"></div><b>2 · Agents run</b><span>Problem 9 live run</span></div>
+        <div class="stage done"><div class="bar"></div><b>3 · Human approval</b><span>1 decided by a person</span></div>
+        <div class="stage done"><div class="bar"></div><b>4 · Resolved</b><span>administrative, per the database</span></div>
+      </div><!-- /P9:track-101 -->
+
+      <section class="network-block pixel-box" data-network="101" data-gate="spyro" aria-labelledby="net-101-h">
+        <div class="net-head">
+          <div><h3 id="net-101-h">Command network · Expected plan</h3>
+            <p>A prediction only. No agent has run on this ticket.</p></div>
+          <button type="button" class="btn-mini" data-demo>▶ Preview animation <small>demo, not a real run</small></button>
+        </div>
+        <!-- Expected routes: the network is drawn from this list. data-kind is "definite" or "conditional". -->
+        <ul class="net-routes" aria-label="Expected delegations for ticket 101">
+          <li data-from="mario" data-to="crash" data-kind="definite" data-step="1">Mario (Boss) → Crash (Inventory): find out whether the shirt is available before promising anything, check the stock and investigate the supplier invoice.</li>
+          <li data-from="crash" data-to="spyro" data-kind="conditional" data-step="2" data-condition="if the supplier invoice requires Accounting">Crash (Inventory) → Spyro (Accounting), if the supplier invoice requires Accounting: if the unpaid invoice is preventing a reprint, assess the payment and submit an approval request.</li>
+          <li data-from="mario" data-to="sonic" data-kind="definite" data-step="3">Mario (Boss) → Sonic (Customer Service): prepare an accurate response explaining the situation and any confirmed next steps.</li>
+        </ul>
+        <p class="net-out" data-out="ryu">Not expected to take part: Ryu (Facilities).</p>
+        <p class="net-gate-text" hidden>The $840 supplier invoice requires approval before any payment.</p>
+      </section>
+
+      <div class="versus">
+        <section class="expected pixel-box" aria-labelledby="exp-101">
+          <div class="vs-head"><h3 id="exp-101">Expected</h3><p>Our prediction before the agents run.</p></div>
+
+          <div class="first-call">
+            <span class="mini" data-sprite="crash" aria-hidden="true"></span>
+            <div><div class="k">Boss calls first</div><div class="v">Inventory (Crash)</div></div>
+          </div>
+
+          <p class="narrative">I expect the Boss to contact Inventory first because we need to determine whether the shirt is available before promising anything to the customer. Inventory should check the stock and investigate the supplier invoice. If the unpaid invoice is preventing a reprint, Accounting needs to assess the payment and submit an approval request. Customer Service should then prepare an accurate response explaining the situation and any confirmed next steps.</p>
+
+          <div class="label">Expected delegation</div>
+          <p class="plain">Boss (Mario) → Inventory (Crash) → Accounting (Spyro), with Boss coordinating Customer Service (Sonic) for the customer response.</p>
+
+          <div class="label">Expected MCP tools</div>
+          <p class="plain tools"><code>get_ticket</code>, <code>check_stock_and_pricing</code>, <code>get_vendor_invoice_status</code>, <code>get_cash_balance</code>, <code>request_invoice_payment</code>, <code>list_approval_requests</code>, <code>update_ticket</code>.</p>
+
+          <div class="gate">
+            <span class="gate-art" aria-hidden="true"></span>
+            <div>
+              <div class="k">Locked gate · human approval</div>
+              <p>Human approval gate: The $840 supplier invoice requires approval before any payment.</p>
+              <p class="note">Visual only. Nothing can be approved or paid from this page.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="actual filled pixel-box" data-actual="101" aria-labelledby="act-101"><!-- P9:actual-101 -->
+          <div class="vs-head"><h3 id="act-101">Actual</h3><p>From the real Problem 9 run. Run 03057176 · audit entries 83–137 · 14 model requests, 14 tool calls, 36,167 tokens · model gpt-6-luna</p></div>
+          <dl class="slots">
+            <dt>Boss called first</dt><dd class="slot filled">Inventory (Crash) · <span class="ok-tag">matches the plan</span></dd>
+            <dt>Agents who worked</dt><dd class="slot filled">Mario (Boss), Crash (Inventory), Spyro (Accounting), Sonic (Customer Service). Not involved: Facilities (Ryu).</dd>
+            <dt>Delegations</dt><dd class="slot filled"><ol><li>Mario (Boss) → Crash (Inventory) <span class='muted'>(completed, audit entry 90)</span></li><li>Crash (Inventory) → Spyro (Accounting) <span class='muted'>(completed, audit entry 99)</span></li><li>Mario (Boss) → Sonic (Customer Service) <span class='muted'>(completed, audit entry 119)</span></li></ol></dd>
+            <dt>MCP tools used</dt><dd class="slot filled"><ul><li><strong>Mario</strong>: <code>get_ticket</code>, <code>update_ticket</code></li><li><strong>Crash</strong>: <code>list_vendors</code>, <code>check_stock_and_pricing</code>, <code>get_vendor_invoice_status</code></li><li><strong>Spyro</strong>: <code>list_approval_requests</code>, <code>get_vendor_invoice_status</code>, <code>get_cash_balance</code>, <code>request_invoice_payment</code></li><li><strong>Sonic</strong>: <code>get_ticket</code>, <code>check_stock_and_pricing</code></li></ul></dd>
+            <dt>Approval requests</dt><dd class="slot filled"><ul><li>#2 invoice payment, $840.00: requested by Spyro, <strong>executed</strong> by Kate Duffy as payment 2</li></ul></dd>
+            <dt>Final ticket status</dt><dd class="slot filled"><strong>resolved</strong> (administrative), by Kate Duffy in the dashboard (audit entry 140).<br><span class='muted'>Still outstanding outside the desk:</span><ul><li>Bulldog Print Co shipping the rush reprint (not confirmed; the 5-day lead time is an estimate)</li><li>The size S tee reaching the customer</li><li>Editing and sending the customer reply (the draft was not sent)</li></ul></dd>
+            <dt>Expected vs. actual</dt><dd class="slot filled"><ul><li>Boss called first: <span class="ok-tag">matches the plan</span></li><li>Routes as planned: Mario → Crash, Crash → Spyro, Mario → Sonic</li><li>Expected tools not used: none</li><li>Tools used beyond the plan: <code>list_vendors</code></li><li>Customer Service&#x27;s draft reply disclosed internal invoice and approval details, which its prompt forbids (audit entry 129). It was not sent. Kate Duffy chose to record the issue, not re-run the ticket.</li></ul></dd>
+          </dl>
+          
+          <section class="network-block actual-network pixel-box" data-network="101-actual" data-ticket="101" data-gate="spyro" data-events="actual-events-101" aria-labelledby="net-101-actual-h">
+            <div class="net-head">
+              <div><h3 id="net-101-actual-h">Command network · Actual run</h3>
+                <p>Drawn from the 27 real audit entries embedded below. Compare with the Expected plan above.</p></div>
+            </div>
+            <ul class="net-routes" aria-label="Planned delegations (for comparison) for ticket 101">
+          <li data-from="mario" data-to="crash" data-kind="definite" data-step="1">Mario (Boss) → Crash (Inventory): find out whether the shirt is available before promising anything, check the stock and investigate the supplier invoice.</li>
+          <li data-from="crash" data-to="spyro" data-kind="conditional" data-step="2" data-condition="if the supplier invoice requires Accounting">Crash (Inventory) → Spyro (Accounting), if the supplier invoice requires Accounting: if the unpaid invoice is preventing a reprint, assess the payment and submit an approval request.</li>
+          <li data-from="mario" data-to="sonic" data-kind="definite" data-step="3">Mario (Boss) → Sonic (Customer Service): prepare an accurate response explaining the situation and any confirmed next steps.</li>
+        </ul>
+            <script type="application/json" id="actual-events-101">[{"ticket_id": 101, "agent": "boss", "depth": 0, "action": "agent_started", "time": "2026-11-05T00:04:30.771+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "boss", "depth": 0, "action": "mcp_tool_call", "tool": "get_ticket", "time": "2026-11-05T00:04:33.393+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "boss", "depth": 0, "action": "delegation_started", "delegation": {"to_agent": "inventory", "task": "For ticket 101 customer order, check SKU CC-TEE-WHITE size S quantity 1: stock on hand, shelf location, list price/unit cost, vendor/restock details, and whether vendor is blocked by unpaid invoice 501. Report confirmed facts and any need for Accounting.", "number": 1}, "time": "2026-11-05T00:04:37.067+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "agent_started", "time": "2026-11-05T00:04:37.087+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "list_vendors", "time": "2026-11-05T00:04:39.702+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "check_stock_and_pricing", "time": "2026-11-05T00:04:39.711+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "get_vendor_invoice_status", "time": "2026-11-05T00:04:39.722+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "delegation_started", "delegation": {"to_agent": "accounting", "task": "Ticket 101: Please queue payment for open invoice 501 ($840, Rush reprint CC-TEE-WHITE S, due 2026-08-28, 3 days past due) to remove Bulldog Print Co's shipping block for the already-indicated reprint. Do not place a duplicate purchase. Report whether payment was queued; payment alone does not confirm shipment.", "number": 2}, "time": "2026-11-05T00:04:46.388+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "accounting", "parent_agent": "inventory", "depth": 2, "action": "agent_started", "time": "2026-11-05T00:04:46.395+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "accounting", "parent_agent": "inventory", "depth": 2, "action": "mcp_tool_call", "tool": "list_approval_requests", "time": "2026-11-05T00:04:49.580+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "accounting", "parent_agent": "inventory", "depth": 2, "action": "mcp_tool_call", "tool": "get_vendor_invoice_status", "time": "2026-11-05T00:04:49.586+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "accounting", "parent_agent": "inventory", "depth": 2, "action": "mcp_tool_call", "tool": "get_cash_balance", "time": "2026-11-05T00:04:49.591+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "accounting", "parent_agent": "inventory", "depth": 2, "action": "mcp_tool_call", "tool": "request_invoice_payment", "time": "2026-11-05T00:04:52.971+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "accounting", "parent_agent": "inventory", "depth": 2, "action": "agent_finished", "time": "2026-11-05T00:04:59.839+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "delegation_finished", "delegation": {"to_agent": "accounting", "task": "Ticket 101: Please queue payment for open invoice 501 ($840, Rush reprint CC-TEE-WHITE S, due 2026-08-28, 3 days past due) to remove Bulldog Print Co's shipping block for the already-indicated reprint. Do not place a duplicate purchase. Report whether payment was queued; payment alone does not confirm shipment."}, "time": "2026-11-05T00:04:59.844+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "agent_finished", "time": "2026-11-05T00:05:06.847+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "boss", "depth": 0, "action": "delegation_finished", "delegation": {"to_agent": "inventory", "task": "For ticket 101 customer order, check SKU CC-TEE-WHITE size S quantity 1: stock on hand, shelf location, list price/unit cost, vendor/restock details, and whether vendor is blocked by unpaid invoice 501. Report confirmed facts and any need for Accounting."}, "time": "2026-11-05T00:05:06.850+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "boss", "depth": 0, "action": "delegation_started", "delegation": {"to_agent": "customer_service", "task": "Draft a reply for ticket 101 requester Tauhid Zaman, using only these confirmed facts: requested CC-TEE-WHITE Classic Bulldog Tee size S qty 1; current stock is 0; list price $28.00; linked invoice 501 for Rush reprint is open/overdue and a payment request is pending human approval; vendor is blocked from shipping until invoice addressed; listed lead-time estimate is 5 days but shipment/delivery is unconfirmed. Be honest that no order/payment/shipment is confirmed; don't promise timing.", "number": 3}, "time": "2026-11-05T00:05:11.896+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "customer_service", "parent_agent": "boss", "depth": 1, "action": "agent_started", "time": "2026-11-05T00:05:11.920+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "customer_service", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "get_ticket", "time": "2026-11-05T00:05:14.310+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "customer_service", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "check_stock_and_pricing", "time": "2026-11-05T00:05:17.949+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "customer_service", "parent_agent": "boss", "depth": 1, "action": "agent_finished", "time": "2026-11-05T00:05:24.990+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "boss", "depth": 0, "action": "delegation_finished", "delegation": {"to_agent": "customer_service", "task": "Draft a reply for ticket 101 requester Tauhid Zaman, using only these confirmed facts: requested CC-TEE-WHITE Classic Bulldog Tee size S qty 1; current stock is 0; list price $28.00; linked invoice 501 for Rush reprint is open/overdue and a payment request is pending human approval; vendor is blocked from shipping until invoice addressed; listed lead-time estimate is 5 days but shipment/delivery is unconfirmed. Be honest that no order/payment/shipment is confirmed; don't promise timing."}, "time": "2026-11-05T00:05:24.996+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "boss", "depth": 0, "action": "mcp_tool_call", "tool": "update_ticket", "time": "2026-11-05T00:05:27.695+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "boss", "depth": 0, "action": "agent_finished", "time": "2026-11-05T00:05:38.107+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "agent": "boss", "depth": 0, "action": "run_finished", "time": "2026-11-05T00:05:38.118+00:00", "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63"}, {"ticket_id": 101, "action": "approval_decided", "time": "2026-11-05T00:08:06.036+00:00", "request_id": 2, "decision": "approved", "decided_by": "Kate Duffy"}]</script>
+          </section><!-- /P9:actual-101 -->
+        </section>
+      </div>
+    </section>
+
+    <!-- ======================= TICKET 102 ======================= -->
+    <section class="panel" role="tabpanel" id="panel-102" aria-labelledby="tab-102" tabindex="0" hidden>
+      <header class="mission-head pixel-box">
+        <div>
+          <span class="level-pixel" data-pixel="LEVEL 102" aria-hidden="true"></span>
+          <h2>Operation Keep the Lights On</h2>
+        </div>
+        <!-- P9:pill-102 --><div class="status-pill" role="status">DB status: resolved<small>Ticket 102 · operational resolution</small></div><!-- /P9:pill-102 -->
+      </header>
+
+      <div class="grid-2">
+        <div class="block pixel-box">
+          <h3>Official ticket</h3>
+          <dl class="kv">
+            <dt>Ticket ID</dt><dd>102</dd>
+            <dt>Type</dt><dd><code>rent_notice</code></dd>
+            <dt>Requester</dt><dd>Elm City Properties</dd>
+            <dt>Subject</dt><dd>Rent due</dd>
+            <dt>Linked lease</dt><dd>1</dd>
+            <dt>Notes</dt><dd>Email: shop rent due in 2 days.</dd>
+            <dt>Created</dt><dd>2026-08-31T11:05:00-04:00</dd>
+            <dt>Status at start</dt><dd>open</dd>
+          </dl>
+        </div>
+        <div class="block pixel-box">
+          <h3>Database facts</h3>
+          <ul class="facts">
+            <li>Lease 1: Chapel Street shop, landlord Elm City Properties.</li>
+            <li>Monthly rent <strong>$2,400.00</strong>, next due <strong>2026-09-02</strong> (2 days after 2026-08-31).</li>
+            <li>Checking balance: $3,400.00.</li>
+            <li>Payments recorded so far: 0.</li>
+          </ul>
+          <p class="source">Tables: tickets, leases, cash_accounts, payments, desk.</p>
+        </div>
+      </div>
+
+      <div class="alerts">
+        <span class="alerts-label">Alerts</span>
+        <button type="button" class="alert alert--approval" data-sound="spyro.approval" data-line="approval-102">
+          <span class="ico"></span>Human approval required <span class="src">· plan</span></button>
+      </div>
+
+      <!-- P9:track-102 --><div class="track" aria-label="Mission progress: 4 of 4 stages">
+        <div class="stage done"><div class="bar"></div><b>1 · Plan written</b><span>Expected section below</span></div>
+        <div class="stage done"><div class="bar"></div><b>2 · Agents run</b><span>Problem 9 live run</span></div>
+        <div class="stage done"><div class="bar"></div><b>3 · Human approval</b><span>1 decided by a person</span></div>
+        <div class="stage done"><div class="bar"></div><b>4 · Resolved</b><span>operational, per the database</span></div>
+      </div><!-- /P9:track-102 -->
+
+      <section class="network-block pixel-box" data-network="102" data-gate="spyro" aria-labelledby="net-102-h">
+        <div class="net-head">
+          <div><h3 id="net-102-h">Command network · Expected plan</h3>
+            <p>A prediction only. No agent has run on this ticket.</p></div>
+          <button type="button" class="btn-mini" data-demo>▶ Preview animation <small>demo, not a real run</small></button>
+        </div>
+        <!-- Expected routes: the network is drawn from this list. data-kind is "definite" or "conditional". -->
+        <ul class="net-routes" aria-label="Expected delegations for ticket 102">
+          <li data-from="mario" data-to="ryu" data-kind="definite" data-step="1">Mario (Boss) → Ryu (Facilities): check the rent notice against the actual lease.</li>
+          <li data-from="ryu" data-to="spyro" data-kind="definite" data-step="2">Ryu (Facilities) → Spyro (Accounting): once the amount and due date are confirmed, verify our available cash and prepare a payment request for human approval.</li>
+        </ul>
+        <p class="net-out" data-out="crash sonic">Not expected to take part: Crash (Inventory) and Sonic (Customer Service).</p>
+        <p class="net-gate-text" hidden>The $2,400 rent payment requires approval.</p>
+      </section>
+
+      <div class="versus">
+        <section class="expected pixel-box" aria-labelledby="exp-102">
+          <div class="vs-head"><h3 id="exp-102">Expected</h3><p>Our prediction before the agents run.</p></div>
+
+          <div class="first-call">
+            <span class="mini" data-sprite="ryu" aria-hidden="true"></span>
+            <div><div class="k">Boss calls first</div><div class="v">Facilities (Ryu)</div></div>
+          </div>
+
+          <p class="narrative">I expect the Boss to contact Facilities first because the rent notice needs to be checked against the actual lease. Once Facilities confirms the amount and due date, Accounting should verify our available cash and prepare a payment request for human approval. Inventory and Customer Service shouldn't be involved because neither contributes anything necessary to resolving the rent issue.</p>
+
+          <div class="label">Expected delegation</div>
+          <p class="plain">Boss (Mario) → Facilities (Ryu) → Accounting (Spyro).</p>
+
+          <div class="label">Expected MCP tools</div>
+          <p class="plain tools"><code>get_ticket</code>, <code>check_rent_due</code>, <code>get_cash_balance</code>, <code>list_approval_requests</code>, <code>request_rent_payment</code>, <code>update_ticket</code>.</p>
+
+          <div class="gate">
+            <span class="gate-art" aria-hidden="true"></span>
+            <div>
+              <div class="k">Locked gate · human approval</div>
+              <p>Human approval gate: The $2,400 rent payment requires approval.</p>
+              <p class="note">Visual only. Nothing can be approved or paid from this page.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="actual filled pixel-box" data-actual="102" aria-labelledby="act-102"><!-- P9:actual-102 -->
+          <div class="vs-head"><h3 id="act-102">Actual</h3><p>From the real Problem 9 run. Run 6ec4e412 · audit entries 41–80 · 10 model requests, 10 tool calls, 22,772 tokens · model gpt-6-luna</p></div>
+          <dl class="slots">
+            <dt>Boss called first</dt><dd class="slot filled">Facilities (Ryu) · <span class="ok-tag">matches the plan</span></dd>
+            <dt>Agents who worked</dt><dd class="slot filled">Mario (Boss), Spyro (Accounting), Ryu (Facilities). Not involved: Inventory (Crash), Customer Service (Sonic).</dd>
+            <dt>Delegations</dt><dd class="slot filled"><ol><li>Mario (Boss) → Ryu (Facilities) <span class='muted'>(completed, audit entry 48)</span></li><li>Ryu (Facilities) → Spyro (Accounting) <span class='muted'>(completed, audit entry 56)</span></li></ol></dd>
+            <dt>MCP tools used</dt><dd class="slot filled"><ul><li><strong>Mario</strong>: <code>get_ticket</code>, <code>update_ticket</code></li><li><strong>Spyro</strong>: <code>list_approval_requests</code>, <code>check_rent_due</code>, <code>get_cash_balance</code>, <code>request_rent_payment</code></li><li><strong>Ryu</strong>: <code>get_ticket</code>, <code>check_rent_due</code></li></ul></dd>
+            <dt>Approval requests</dt><dd class="slot filled"><ul><li>#1 rent payment, $2,400.00: requested by Spyro, <strong>executed</strong> by Kate Duffy as payment 1</li></ul></dd>
+            <dt>Final ticket status</dt><dd class="slot filled"><strong>resolved</strong> (operational), by Kate Duffy in the dashboard (audit entry 82).</dd>
+            <dt>Expected vs. actual</dt><dd class="slot filled"><ul><li>Boss called first: <span class="ok-tag">matches the plan</span></li><li>Routes as planned: Mario → Ryu, Ryu → Spyro</li><li>Expected tools not used: none</li><li>Tools used beyond the plan: none</li></ul></dd>
+          </dl>
+          
+          <section class="network-block actual-network pixel-box" data-network="102-actual" data-ticket="102" data-gate="spyro" data-events="actual-events-102" aria-labelledby="net-102-actual-h">
+            <div class="net-head">
+              <div><h3 id="net-102-actual-h">Command network · Actual run</h3>
+                <p>Drawn from the 20 real audit entries embedded below. Compare with the Expected plan above.</p></div>
+            </div>
+            <ul class="net-routes" aria-label="Planned delegations (for comparison) for ticket 102">
+          <li data-from="mario" data-to="ryu" data-kind="definite" data-step="1">Mario (Boss) → Ryu (Facilities): check the rent notice against the actual lease.</li>
+          <li data-from="ryu" data-to="spyro" data-kind="definite" data-step="2">Ryu (Facilities) → Spyro (Accounting): once the amount and due date are confirmed, verify our available cash and prepare a payment request for human approval.</li>
+        </ul>
+            <script type="application/json" id="actual-events-102">[{"ticket_id": 102, "agent": "boss", "depth": 0, "action": "agent_started", "time": "2026-11-04T23:59:48.377+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "boss", "depth": 0, "action": "mcp_tool_call", "tool": "get_ticket", "time": "2026-11-04T23:59:52.732+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "boss", "depth": 0, "action": "delegation_started", "delegation": {"to_agent": "facilities", "task": "For ticket 102, check rent notice against lease_id 1. Tell me whether notice matches lease, amount and due date facts, and whether Accounting should queue payment. Do not request payment yourself unless your workflow requires handing directly to Accounting; report outcome.", "number": 1}, "time": "2026-11-04T23:59:55.631+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "facilities", "parent_agent": "boss", "depth": 1, "action": "agent_started", "time": "2026-11-04T23:59:55.640+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "facilities", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "get_ticket", "time": "2026-11-04T23:59:57.499+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "facilities", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "check_rent_due", "time": "2026-11-04T23:59:57.510+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "facilities", "parent_agent": "boss", "depth": 1, "action": "delegation_started", "delegation": {"to_agent": "accounting", "task": "Queue the rent payment for lease 1 on ticket 102. Facilities confirmed monthly rent $2,400, due 2026-09-02 (2 days from 2026-08-31); please confirm the cash position. The notice matches the lease landlord Elm City Properties.", "number": 2}, "time": "2026-11-05T00:00:00.327+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "accounting", "parent_agent": "facilities", "depth": 2, "action": "agent_started", "time": "2026-11-05T00:00:00.354+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "accounting", "parent_agent": "facilities", "depth": 2, "action": "mcp_tool_call", "tool": "list_approval_requests", "time": "2026-11-05T00:00:05.611+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "accounting", "parent_agent": "facilities", "depth": 2, "action": "mcp_tool_call", "tool": "check_rent_due", "time": "2026-11-05T00:00:05.616+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "accounting", "parent_agent": "facilities", "depth": 2, "action": "mcp_tool_call", "tool": "get_cash_balance", "time": "2026-11-05T00:00:05.619+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "accounting", "parent_agent": "facilities", "depth": 2, "action": "mcp_tool_call", "tool": "request_rent_payment", "time": "2026-11-05T00:00:07.849+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "accounting", "parent_agent": "facilities", "depth": 2, "action": "agent_finished", "time": "2026-11-05T00:00:11.984+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "facilities", "parent_agent": "boss", "depth": 1, "action": "delegation_finished", "delegation": {"to_agent": "accounting", "task": "Queue the rent payment for lease 1 on ticket 102. Facilities confirmed monthly rent $2,400, due 2026-09-02 (2 days from 2026-08-31); please confirm the cash position. The notice matches the lease landlord Elm City Properties."}, "time": "2026-11-05T00:00:11.994+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "facilities", "parent_agent": "boss", "depth": 1, "action": "agent_finished", "time": "2026-11-05T00:00:16.463+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "boss", "depth": 0, "action": "delegation_finished", "delegation": {"to_agent": "facilities", "task": "For ticket 102, check rent notice against lease_id 1. Tell me whether notice matches lease, amount and due date facts, and whether Accounting should queue payment. Do not request payment yourself unless your workflow requires handing directly to Accounting; report outcome."}, "time": "2026-11-05T00:00:16.476+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "boss", "depth": 0, "action": "mcp_tool_call", "tool": "update_ticket", "time": "2026-11-05T00:00:18.910+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "boss", "depth": 0, "action": "agent_finished", "time": "2026-11-05T00:00:22.258+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "agent": "boss", "depth": 0, "action": "run_finished", "time": "2026-11-05T00:00:22.261+00:00", "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e"}, {"ticket_id": 102, "action": "approval_decided", "time": "2026-11-05T00:02:39.219+00:00", "request_id": 1, "decision": "approved", "decided_by": "Kate Duffy"}]</script>
+          </section><!-- /P9:actual-102 -->
+        </section>
+      </div>
+    </section>
+
+    <!-- ======================= TICKET 103 ======================= -->
+    <section class="panel" role="tabpanel" id="panel-103" aria-labelledby="tab-103" tabindex="0" hidden>
+      <header class="mission-head pixel-box">
+        <div>
+          <span class="level-pixel" data-pixel="LEVEL 103" aria-hidden="true"></span>
+          <h2>Operation Hoodie Negotiation</h2>
+        </div>
+        <!-- P9:pill-103 --><div class="status-pill" role="status">DB status: resolved<small>Ticket 103 · administrative resolution</small></div><!-- /P9:pill-103 -->
+      </header>
+
+      <div class="grid-2">
+        <div class="block pixel-box">
+          <h3>Official ticket</h3>
+          <dl class="kv">
+            <dt>Ticket ID</dt><dd>103</dd>
+            <dt>Type</dt><dd><code>price_override</code></dd>
+            <dt>Requester</dt><dd>Yale AI Club</dd>
+            <dt>Subject</dt><dd>Bulk hoodie discount</dd>
+            <dt>Item</dt><dd><code>CC-HOOD-NAVY</code>, size M, qty 20</dd>
+            <dt>Notes</dt><dd>Student org wants 20 hoodies, size M, asking for a bulk discount.</dd>
+            <dt>Created</dt><dd>2026-08-31T16:55:00-04:00</dd>
+            <dt>Status at start</dt><dd>open</dd>
+          </dl>
+        </div>
+        <div class="block pixel-box">
+          <h3>Database facts</h3>
+          <ul class="facts">
+            <li>Basic Hoodie Big Yale, size M: <strong>8 on hand</strong> (Aisle A); 20 requested, so 12 short.</li>
+            <li>List price $58.00; unit cost <strong>$22.00</strong> (the lowest price we can accept).</li>
+            <li>Checking balance: $3,400.00.</li>
+            <li>The ticket names no supplier, and no restock is confirmed.</li>
+          </ul>
+          <p class="source">Tables: tickets, inventory, pricing, cash_accounts, desk.</p>
+        </div>
+      </div>
+
+      <div class="alerts">
+        <span class="alerts-label">Alerts</span>
+        <button type="button" class="alert alert--shortage" data-sound="crash.woah" data-line="crash-shortage-103">
+          <span class="ico"></span>Inventory shortage <span class="src">· database: 8 of 20</span></button>
+        <button type="button" class="alert alert--approval" data-sound="spyro.approval" data-line="approval-103">
+          <span class="ico"></span>Human approval required <span class="src">· plan</span></button>
+      </div>
+
+      <!-- P9:track-103 --><div class="track" aria-label="Mission progress: 4 of 4 stages">
+        <div class="stage done"><div class="bar"></div><b>1 · Plan written</b><span>Expected section below</span></div>
+        <div class="stage done"><div class="bar"></div><b>2 · Agents run</b><span>Problem 9 live run</span></div>
+        <div class="stage done"><div class="bar"></div><b>3 · Human approval</b><span>1 decided by a person</span></div>
+        <div class="stage done"><div class="bar"></div><b>4 · Resolved</b><span>administrative, per the database</span></div>
+      </div><!-- /P9:track-103 -->
+
+      <section class="network-block pixel-box" data-network="103" data-gate="spyro" aria-labelledby="net-103-h">
+        <div class="net-head">
+          <div><h3 id="net-103-h">Command network · Expected plan</h3>
+            <p>A prediction only. No agent has run on this ticket.</p></div>
+          <button type="button" class="btn-mini" data-demo>▶ Preview animation <small>demo, not a real run</small></button>
+        </div>
+        <!-- Expected routes: the network is drawn from this list. data-kind is "definite" or "conditional". -->
+        <ul class="net-routes" aria-label="Expected delegations for ticket 103">
+          <li data-from="mario" data-to="crash" data-kind="definite" data-step="1">Mario (Boss) → Crash (Inventory): confirm whether we have enough hoodies to fulfill the request.</li>
+          <li data-from="mario" data-to="spyro" data-kind="definite" data-step="2">Mario (Boss) → Spyro (Accounting): evaluate the pricing and whether a discount makes financial sense, without offering anything below our unit cost.</li>
+          <li data-from="mario" data-to="sonic" data-kind="definite" data-step="3">Mario (Boss) → Sonic (Customer Service): prepare a response explaining what we can actually offer, including any inventory limitations.</li>
+        </ul>
+        <p class="net-out" data-out="ryu">Not expected to take part: Ryu (Facilities).</p>
+        <p class="net-gate-text" hidden>Any proposed discount requires authorization before it becomes a confirmed offer.</p>
+      </section>
+
+      <div class="versus">
+        <section class="expected pixel-box" aria-labelledby="exp-103">
+          <div class="vs-head"><h3 id="exp-103">Expected</h3><p>Our prediction before the agents run.</p></div>
+
+          <div class="first-call">
+            <span class="mini" data-sprite="crash" aria-hidden="true"></span>
+            <div><div class="k">Boss calls first</div><div class="v">Inventory (Crash)</div></div>
+          </div>
+
+          <p class="narrative">I expect the Boss to contact Inventory first to confirm whether we have enough hoodies to fulfill the request. Accounting should then evaluate the pricing and whether a discount makes financial sense, without offering anything below our unit cost. Customer Service should prepare a response explaining what we can actually offer, including any inventory limitations. We shouldn't commit to a discount or delivery date until the necessary approvals and supply information are confirmed.</p>
+
+          <div class="label">Expected delegation</div>
+          <p class="plain">Boss (Mario) → Inventory (Crash), followed by Accounting (Spyro) and Customer Service (Sonic) as needed.</p>
+
+          <div class="label">Expected MCP tools</div>
+          <p class="plain tools"><code>get_ticket</code>, <code>check_stock_and_pricing</code>, <code>list_vendors</code>, <code>get_cash_balance</code>, <code>request_discount</code>, <code>list_approval_requests</code>, <code>update_ticket</code>.</p>
+
+          <div class="gate">
+            <span class="gate-art" aria-hidden="true"></span>
+            <div>
+              <div class="k">Locked gate · human approval</div>
+              <p>Human approval gate: Any proposed discount requires authorization before it becomes a confirmed offer.</p>
+              <p class="note">Visual only. Nothing can be approved or paid from this page.</p>
+            </div>
+          </div>
+
+          <p class="guardrail"><b>Guardrail</b><br>Do not assume the hoodie supplier, the availability of additional stock, or that the customer would accept a partial order without verified information.</p>
+        </section>
+
+        <section class="actual filled pixel-box" data-actual="103" aria-labelledby="act-103"><!-- P9:actual-103 -->
+          <div class="vs-head"><h3 id="act-103">Actual</h3><p>From the real Problem 9 run. Run 901913e1 · audit entries 188–237 · 13 model requests, 11 tool calls, 38,345 tokens · model gpt-6-luna</p></div>
+          <dl class="slots">
+            <dt>Boss called first</dt><dd class="slot filled">Inventory (Crash) · <span class="ok-tag">matches the plan</span></dd>
+            <dt>Agents who worked</dt><dd class="slot filled">Mario (Boss), Crash (Inventory), Spyro (Accounting), Sonic (Customer Service). Not involved: Facilities (Ryu).</dd>
+            <dt>Delegations</dt><dd class="slot filled"><ol><li>Mario (Boss) → Crash (Inventory) <span class='muted'>(completed, audit entry 195)</span></li><li>Mario (Boss) → Spyro (Accounting) <span class='muted'>(completed, audit entry 207)</span></li><li>Mario (Boss) → Sonic (Customer Service) <span class='muted'>(completed, audit entry 222)</span></li></ol></dd>
+            <dt>MCP tools used</dt><dd class="slot filled"><ul><li><strong>Mario</strong>: <code>get_ticket</code>, <code>update_ticket</code></li><li><strong>Crash</strong>: <code>check_stock_and_pricing</code>, <code>list_vendors</code></li><li><strong>Spyro</strong>: <code>list_approval_requests</code>, <code>get_cash_balance</code>, <code>request_discount</code></li><li><strong>Sonic</strong>: <code>get_ticket</code></li></ul></dd>
+            <dt>Approval requests</dt><dd class="slot filled"><ul><li>#3 discount offer, $417.60 (no cash moves): requested by Spyro, <strong>executed</strong> by Kate Duffy</li></ul></dd>
+            <dt>Final ticket status</dt><dd class="slot filled"><strong>resolved</strong> (administrative), by Kate Duffy in the dashboard (audit entry 240).<br><span class='muted'>Still outstanding outside the desk:</span><ul><li>The Yale AI Club accepting (or declining) the offer for 8 hoodies</li><li>A confirmed supplier and supply for the 12-unit shortfall (no vendor-to-SKU record exists)</li><li>Sending the customer reply (the draft was not sent)</li></ul></dd>
+            <dt>Expected vs. actual</dt><dd class="slot filled"><ul><li>Boss called first: <span class="ok-tag">matches the plan</span></li><li>Routes as planned: Mario → Crash, Mario → Spyro, Mario → Sonic</li><li>Expected tools not used: none</li><li>Tools used beyond the plan: none</li><li>First run (audit entries 141–187) filed no discount request. Mario asked whether a request could be filed without a customer-proposed price, and Accounting declined to propose one.</li><li>In the first run, Accounting looked up the stock with sku &quot;hoodie&quot; instead of CC-HOOD-NAVY and got not-found (audit entry 165).</li><li>After a targeted prompt fix (Boss: Accounting proposes the price; Accounting: propose within policy, use exact SKUs), the second run (audit entries 188–237) filed discount request #3 within policy, using the exact SKU.</li><li>In the second run, Mario told Inventory to rely on the previous run&#x27;s ticket note, and Inventory passed requested_quantity 12 instead of 20 (audit entry 199). Inventory explained the mismatch, and the final figures are correct.</li></ul></dd>
+          </dl>
+          <p class='run-note'><strong>First run (kept for the record):</strong> audit entries 141–187, Mario → Crash, Mario → Spyro, Mario → Sonic; no approval requests filed. See the findings below. The figures above are from the second run.</p>
+          <section class="network-block actual-network pixel-box" data-network="103-actual" data-ticket="103" data-gate="spyro" data-events="actual-events-103" aria-labelledby="net-103-actual-h">
+            <div class="net-head">
+              <div><h3 id="net-103-actual-h">Command network · Actual run</h3>
+                <p>Drawn from the 24 real audit entries embedded below. Compare with the Expected plan above.</p></div>
+            </div>
+            <ul class="net-routes" aria-label="Planned delegations (for comparison) for ticket 103">
+          <li data-from="mario" data-to="crash" data-kind="definite" data-step="1">Mario (Boss) → Crash (Inventory): confirm whether we have enough hoodies to fulfill the request.</li>
+          <li data-from="mario" data-to="spyro" data-kind="definite" data-step="2">Mario (Boss) → Spyro (Accounting): evaluate the pricing and whether a discount makes financial sense, without offering anything below our unit cost.</li>
+          <li data-from="mario" data-to="sonic" data-kind="definite" data-step="3">Mario (Boss) → Sonic (Customer Service): prepare a response explaining what we can actually offer, including any inventory limitations.</li>
+        </ul>
+            <script type="application/json" id="actual-events-103">[{"ticket_id": 103, "agent": "boss", "depth": 0, "action": "agent_started", "time": "2026-11-05T00:22:47.007+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "mcp_tool_call", "tool": "get_ticket", "time": "2026-11-05T00:22:56.927+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "delegation_started", "delegation": {"to_agent": "inventory", "task": "For ticket 103, the ticket note already records 8 of 20 size M on hand, 12 short, and vendor supply unconfirmed. Please do not repeat those checks; provide the missing unit cost and list price for SKU CC-HOOD-NAVY size M, and clarify whether the supplier can provide the 12 short and any invoice/blocker information needed for that supply.", "number": 1}, "time": "2026-11-05T00:23:03.428+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "agent_started", "time": "2026-11-05T00:23:03.444+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "check_stock_and_pricing", "time": "2026-11-05T00:23:05.432+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "list_vendors", "time": "2026-11-05T00:23:05.447+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "inventory", "parent_agent": "boss", "depth": 1, "action": "agent_finished", "time": "2026-11-05T00:23:13.705+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "delegation_finished", "delegation": {"to_agent": "inventory", "task": "For ticket 103, the ticket note already records 8 of 20 size M on hand, 12 short, and vendor supply unconfirmed. Please do not repeat those checks; provide the missing unit cost and list price for SKU CC-HOOD-NAVY size M, and clarify whether the supplier can provide the 12 short and any invoice/blocker information needed for that supply."}, "time": "2026-11-05T00:23:13.718+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "delegation_started", "delegation": {"to_agent": "accounting", "task": "Ticket 103 price_override. Inventory confirms CC-HOOD-NAVY size M unit cost $22.00 and list price $58.00; 8 of the requested 20 are on hand, leaving 12 unconfirmed with supplier. Please assess a bulk discount under policy based only on quantity we can actually supply now, recommend a price that is not below unit cost, and file the discount approval request if appropriate. Do not assume supply for the 12 short.", "number": 2}, "time": "2026-11-05T00:23:18.702+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "accounting", "parent_agent": "boss", "depth": 1, "action": "agent_started", "time": "2026-11-05T00:23:18.731+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "accounting", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "list_approval_requests", "time": "2026-11-05T00:23:22.637+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "accounting", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "get_cash_balance", "time": "2026-11-05T00:23:22.648+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "accounting", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "request_discount", "time": "2026-11-05T00:23:26.033+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "accounting", "parent_agent": "boss", "depth": 1, "action": "agent_finished", "time": "2026-11-05T00:23:32.901+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "delegation_finished", "delegation": {"to_agent": "accounting", "task": "Ticket 103 price_override. Inventory confirms CC-HOOD-NAVY size M unit cost $22.00 and list price $58.00; 8 of the requested 20 are on hand, leaving 12 unconfirmed with supplier. Please assess a bulk discount under policy based only on quantity we can actually supply now, recommend a price that is not below unit cost, and file the discount approval request if appropriate. Do not assume supply for the 12 short."}, "time": "2026-11-05T00:23:32.913+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "delegation_started", "delegation": {"to_agent": "customer_service", "task": "Draft a reply for ticket 103 to Yale AI Club using confirmed facts only: requested 20 CC-HOOD-NAVY size M; 8 are confirmed on hand and a 12-unit shortage remains with supplier availability unconfirmed. Accounting filed pending discount approval request #3 for the 8 on-hand units at $52.20 each; it is not approved, so do not promise that price/discount. Explain the supply and approval status clearly and do not imply an order or discount is confirmed.", "number": 3}, "time": "2026-11-05T00:23:36.349+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "customer_service", "parent_agent": "boss", "depth": 1, "action": "agent_started", "time": "2026-11-05T00:23:36.397+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "customer_service", "parent_agent": "boss", "depth": 1, "action": "mcp_tool_call", "tool": "get_ticket", "time": "2026-11-05T00:23:38.563+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "customer_service", "parent_agent": "boss", "depth": 1, "action": "agent_finished", "time": "2026-11-05T00:23:44.827+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "delegation_finished", "delegation": {"to_agent": "customer_service", "task": "Draft a reply for ticket 103 to Yale AI Club using confirmed facts only: requested 20 CC-HOOD-NAVY size M; 8 are confirmed on hand and a 12-unit shortage remains with supplier availability unconfirmed. Accounting filed pending discount approval request #3 for the 8 on-hand units at $52.20 each; it is not approved, so do not promise that price/discount. Explain the supply and approval status clearly and do not imply an order or discount is confirmed."}, "time": "2026-11-05T00:23:44.852+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "mcp_tool_call", "tool": "update_ticket", "time": "2026-11-05T00:23:49.755+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "agent_finished", "time": "2026-11-05T00:23:55.749+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "agent": "boss", "depth": 0, "action": "run_finished", "time": "2026-11-05T00:23:55.755+00:00", "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f"}, {"ticket_id": 103, "action": "approval_decided", "time": "2026-11-05T00:24:07.332+00:00", "request_id": 3, "decision": "approved", "decided_by": "Kate Duffy"}]</script>
+          </section><!-- /P9:actual-103 -->
+        </section>
+      </div>
+    </section>
+
+    <!-- ======================= CASH (later problem) ======================= -->
+    <section class="panel" role="tabpanel" id="panel-cash" aria-labelledby="tab-cash" tabindex="0" hidden><!-- P9:cash -->
+      <div class="cash-board pixel-box">
+        <h2>Cash</h2>
+        <p class="lead">The checking account through the Problem 9 run. Every figure comes from <code>payments</code>,
+          <code>approval_requests</code> and <code>cash_accounts</code> in the working database, and from the audit trail.</p>
+        <div class="cash-figures">
+          <div><b>Starting balance (after the reset)</b><span>$3,400.00</span></div>
+          <div><b>Paid out (human-approved)</b><span>$3,240.00</span></div>
+          <div><b>Ending balance</b><span>$160.00</span></div>
+        </div>
+        <p class="muted">Reset by Kate Duffy at 2026-11-04T23:58:09.875+00:00 (audit entry 40),
+          which restored the original database: checking $3,400.00.</p>
+        <div class="ledger-scroll"><table class="ledger">
+          <thead><tr><th>#</th><th>Ticket</th><th>What was approved, and why</th><th>Request</th><th>Payment</th>
+            <th>Approved by</th><th>Cash change</th><th>Balance after</th></tr></thead>
+          <tbody><tr><td>1</td><td>Ticket 102<br><span class='muted'>Operation Keep the Lights On</span></td><td>Rent for Chapel Street shop to Elm City Properties, due 2026-09-02</td><td>#1</td><td>1</td><td>Kate Duffy<br><span class='muted'>2026-11-05T00:02:39+00:00</span></td><td class='num'>−$2,400.00</td><td class='num'>$1,000.00</td></tr><tr><td>2</td><td>Ticket 101<br><span class='muted'>Operation Missing Tee</span></td><td>Invoice 501: Rush reprint CC-TEE-WHITE S (due 2026-08-28)</td><td>#2</td><td>2</td><td>Kate Duffy<br><span class='muted'>2026-11-05T00:08:05+00:00</span></td><td class='num'>−$840.00</td><td class='num'>$160.00</td></tr><tr><td>3</td><td>Ticket 103<br><span class='muted'>Operation Hoodie Negotiation</span></td><td>Discount offer: 8 × CC-HOOD-NAVY at $52.20 (10% off; 12 short). A price, not a payment</td><td>#3</td><td>-</td><td>Kate Duffy<br><span class='muted'>2026-11-05T00:24:07+00:00</span></td><td class='num'>$0.00</td><td class='num'>$160.00</td></tr></tbody>
+        </table></div>
+        <p class="muted">Listed in the order the tickets were resolved. No purchases were requested: restocking the 12 missing hoodies
+          would cost 12 × $22.00 = $264.00, more than the $160.00 left. The discount moved no cash.</p>
+        <p class="recon">$3,400.00 − $2,400.00 − $840.00 = <strong>$160.00</strong> ·
+          <code>cash_accounts</code> (checking) = <strong>$160.00</strong> · reconciled ✓</p>
+      </div>
+    <!-- /P9:cash --></section>
+
+    <!-- ======================= REFLECTION (later problem) ======================= -->
+    <section class="panel" role="tabpanel" id="panel-reflection" aria-labelledby="tab-reflection" tabindex="0" hidden>
+      <!-- P10:reflection -->
+      <article class="reflection-board pixel-box">
+        <h2>Problem 10: Reflection</h2>
+        <p class="refl-sub">Campus Customs Multi-Agent Operations</p>
+        <h3>1. How did the agents perform on each ticket?</h3>
+        <p>What I found most interesting about this project was that the agents generally had access to the information they needed, but that didn't necessarily mean they knew what to do with it. Building a multi-agent system made me think less about whether AI can complete individual tasks and more about how effectively it can coordinate work, interpret responsibilities, and recognize when a decision requires human judgment.</p>
+        <p>Ticket 102 was probably the clearest example of the system working as intended. Mario recognized that the rent notice required Facilities and Accounting rather than involving the entire team. Ryu verified the notice against the lease, Spyro checked the available funds and prepared the payment request, and the system stopped for human approval. The payment was executed only after I authorized it. This was an effective division of responsibilities, and the agents didn't waste time involving specialists who had nothing to contribute.</p>
+        <p>Ticket 101 exposed a different problem. The agents correctly identified the inventory shortage, the unpaid supplier invoice, and the need for human approval before making a payment. However, Sonic included internal invoice and payment information in the customer-facing response. The information wasn't fabricated, but it was still inappropriate to share. This demonstrated that factual accuracy and good judgment are not the same thing. An AI agent can provide technically correct information while still making a poor communication decision.</p>
+        <p>Ticket 103 was probably the most useful learning experience because the initial run didn't produce the action I expected. Spyro understood the inventory shortage and could explain the discount policy, but never submitted a discount request. It interpreted the absence of a customer-proposed price as a reason not to proceed, even though proposing a price within the established guidelines was part of Accounting's responsibility. Spyro also used a generic product description instead of the actual SKU during one lookup. These weren't problems with the underlying arithmetic. They were problems with interpreting the assignment and translating available information into action.</p>
+        <p>We addressed these issues by clarifying the agents' responsibilities and rerunning the ticket while preserving the original results. This demonstrated that improving an AI system doesn't always require more tools or better data. Sometimes the problem is how a task is framed or what assumptions an agent makes about its own authority.</p>
+        <h3>2. How did the actual results compare with my expected plans?</h3>
+        <p>For Ticket 102, the actual delegation matched my expected plan exactly. Mario involved Ryu first to verify the lease, and Ryu delegated the financial work to Spyro. The agents used the appropriate tools and prepared the $2,400 rent request without involving Inventory or Customer Service. After I approved the payment, the ticket was operationally resolved.</p>
+        <p>Ticket 101 also followed the expected delegation structure. Mario involved Crash, Crash brought in Spyro to handle the overdue invoice, and Mario involved Sonic to draft the customer response. Crash additionally used <code>list_vendors</code>, which made sense given the inventory shortage. The main deviation wasn't the delegation structure but the quality of Sonic's output. I expected a customer-appropriate response based on confirmed information, but Sonic exposed confidential internal details. The draft was preserved for evaluation rather than sent.</p>
+        <p>Ticket 103 was different because the initial delegation structure was correct, but the expected action didn't occur. Mario involved Crash, Spyro, and Sonic as planned. However, Spyro never called <code>request_discount</code>, so the human approval gate I expected never appeared. It also failed an inventory lookup by using "hoodie" instead of the actual SKU. After we clarified responsibility for proposing the discount and using exact identifiers, the second run followed the intended workflow.</p>
+        <p>The most interesting distinction was that the agents could follow the correct organizational structure without necessarily producing the correct outcome. Delegating to the right person doesn't guarantee that the person understands what decision they're responsible for making.</p>
+        <p>The Cash tab also confirmed the importance of keeping decisions and transactions separate. We started with $3,400, approved $2,400 for rent and $840 for the supplier invoice, and finished with $160. The hoodie discount did not change checking because approving a selling price isn't the same as paying an expense. The final balance matched the database.</p>
+        <h3>3. What would have been simpler with one agent using all the tools?</h3>
+        <p>I think Ticket 102 would have been easier to execute with one agent.</p>
+        <p>The workflow was relatively predictable: verify the rent notice against the lease, check the checking balance, and prepare a payment request. It didn't require much interpretation or collaboration between different functions. The multi-agent approach completed it successfully, but it required 10 model requests and 22,772 tokens to move through the delegation structure. A single agent with access to those tools could probably have completed the same investigation with less communication overhead.</p>
+        <p>Ticket 103 also demonstrated how handoffs can introduce unnecessary confusion. Mario's initial instructions to Spyro framed the proposed price as information that needed to come from the customer. Spyro followed that interpretation rather than recognizing that recommending a price was part of its responsibility. A single agent might have avoided that particular misunderstanding because the inventory, pricing, and approval-preparation tasks would have remained within one context.</p>
+        <p>However, I wouldn't necessarily conclude that a single agent is better overall. Separating responsibilities also created meaningful boundaries. Only Accounting could submit financial approval requests, and Customer Service didn't need access to the shop's internal financial tools. Those boundaries made the system easier to supervise, even if they introduced additional coordination costs.</p>
+        <p>To me, this suggests that the decision to use multiple agents should depend on whether specialization and accountability add enough value to justify the additional complexity. More agents don't automatically mean better performance.</p>
+        <h3>4. What three new problems could this team solve with its current tools?</h3>
+        <p><strong>First, the team could investigate another rent notice.</strong> The lease database records the next rent due date, so Facilities could verify a new notice against the lease and Accounting could assess whether the payment was affordable. The team could prepare an approval request when funding permits. It wouldn't need an entirely new workflow because it already demonstrated this capability on Ticket 102.</p>
+        <p><strong>Second, the team could evaluate a new order for the blue campus caps.</strong> The inventory database contains stock for <code>CC-HAT-BLUE</code>. Inventory could check available quantities, sizes and pricing, Accounting could evaluate the financial implications if necessary, and Customer Service could draft an accurate response describing what the store could fulfill. A routine order within available inventory would be a relatively straightforward application of the existing tools.</p>
+        <p><strong>Third, the team could investigate another request for a group discount.</strong> Inventory could verify the requested products and quantities, Accounting could evaluate the proposed price against the simulation's discount policy, and Customer Service could draft a response explaining what could actually be offered. Human approval would still be required before confirming the discount.</p>
+        <p>These are problems the existing system is reasonably equipped to evaluate because they rely on information already present in its database and tools.</p>
+        <h3>5. What three new problems couldn't this team solve, and what would it need?</h3>
+        <p><strong>First, the team couldn't solve an ongoing cash shortage by generating revenue.</strong> At the end of our simulation, checking contained only $160, while the next monthly rent obligation was $2,400. Accounting could identify the shortfall, but none of the agents could process sales, record incoming revenue, or forecast collections using actual transaction data. I would add sales and accounts-receivable tools, along with a Finance or Sales agent capable of analyzing expected revenue and cash flow. Any financial decisions would still need appropriate authorization.</p>
+        <p><strong>Second, the team couldn't properly receive and record new inventory when a shipment arrived.</strong> It could check existing stock and identify shortages, but there wasn't a tool to verify a delivery, record received quantities, or update inventory from a physical shipment. I would add shipment-tracking and inventory-receiving tools. Inventory could retain responsibility for the process, although a dedicated Receiving agent might be useful if the operation became more complex. Ideally, the system would require confirmation that the merchandise physically arrived before adding it to available stock.</p>
+        <p><strong>Third, the team couldn't actually communicate with customers or verify whether an offer was accepted.</strong> Sonic could draft a response, but the system couldn't send it, record a reply, or establish that the customer agreed to the proposed terms. I would add a customer communication tool and a customer interaction history, with a human review step before external messages are sent. Customer Service could then manage the interaction through completion rather than stopping at a draft.</p>
+        <p>These limitations also show why I wanted to distinguish administrative resolution from operational resolution. Completing the internal process doesn't necessarily mean the underlying customer problem has been solved.</p>
+        <h3>Final thoughts</h3>
+        <p>The exercise reinforced my belief that human oversight should be designed into a system rather than added as a final precaution. None of the agents could independently execute a payment or resolve a ticket. They could investigate, make recommendations, and prepare requests, but certain decisions remained with a person.</p>
+        <p>I also came away thinking more carefully about how organizations define completion. Paying the supplier invoice didn't mean the customer had received the shirt, and approving a discount didn't mean the club had accepted the offer. A system can appear successful according to its metrics while leaving meaningful work unfinished. That seems especially relevant in organizations where performance is measured by completed tickets, closed cases, or turnaround times.</p>
+        <p>If I were developing this system further, I would focus on improving how agents interpret their responsibilities and evaluate their own outputs. I would want Customer Service responses checked for confidentiality and appropriateness before they were presented for approval. I would also want agents to distinguish between missing information that genuinely prevents a decision and missing information they are responsible for developing themselves.</p>
+        <p>Overall, the project changed how I think about multi-agent systems. I initially approached the agents as specialists that could divide work according to their functions. By the end, I was thinking about them much more like a management team. Having the right expertise represented wasn't enough. The system also needed clear authority, effective delegation, shared context, accountability, and a reliable way to recognize its own limitations.</p>
+        <p>The most important lesson for me was that <strong>automating work and improving decision-making are not interchangeable</strong>. AI can make a process faster and more efficient, but whether that process produces a good outcome still depends on how the system is designed, what behavior it rewards, and where human judgment remains involved.</p>
+        <p class="refl-author">Written by Kate Duffy for Problem 10, about the Problem 9 run recorded in the ticket tabs and the Cash tab of this page.</p>
+      </article>
+      <!-- /P10:reflection -->
+    </section>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Character art on this page is original pixel art made for this project, inspired by the characters' classic colours.
+    It is not taken from the games. Every sound is an original Web Audio synth placeholder, not a recording from the
+    games. Character names belong to their respective owners and are used here for a class project.</p>
+  <p>The page only reads facts recorded on 2026-11-03 from the working database. It runs no agents and cannot approve,
+    pay or change anything.</p>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  root.classList.remove("no-js");
+  root.classList.add("js");
+  var reduceMotion = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+
+  /* ------------------------------------------------------------------
+     Pixel font (5x7), used for the title and level labels.
+  ------------------------------------------------------------------ */
+  var FONT = {
+    "A":"01110,10001,10001,11111,10001,10001,10001", "B":"11110,10001,10001,11110,10001,10001,11110",
+    "C":"01110,10001,10000,10000,10000,10001,01110", "D":"11110,10001,10001,10001,10001,10001,11110",
+    "E":"11111,10000,10000,11110,10000,10000,11111", "F":"11111,10000,10000,11110,10000,10000,10000",
+    "G":"01110,10001,10000,10111,10001,10001,01111", "H":"10001,10001,10001,11111,10001,10001,10001",
+    "I":"01110,00100,00100,00100,00100,00100,01110", "J":"00111,00010,00010,00010,00010,10010,01100",
+    "K":"10001,10010,10100,11000,10100,10010,10001", "L":"10000,10000,10000,10000,10000,10000,11111",
+    "M":"10001,11011,10101,10101,10001,10001,10001", "N":"10001,10001,11001,10101,10011,10001,10001",
+    "O":"01110,10001,10001,10001,10001,10001,01110", "P":"11110,10001,10001,11110,10000,10000,10000",
+    "Q":"01110,10001,10001,10001,10101,10010,01101", "R":"11110,10001,10001,11110,10100,10010,10001",
+    "S":"01111,10000,10000,01110,00001,00001,11110", "T":"11111,00100,00100,00100,00100,00100,00100",
+    "U":"10001,10001,10001,10001,10001,10001,01110", "V":"10001,10001,10001,10001,10001,01010,00100",
+    "W":"10001,10001,10001,10101,10101,10101,01010", "X":"10001,10001,01010,00100,01010,10001,10001",
+    "Y":"10001,10001,01010,00100,00100,00100,00100", "Z":"11111,00001,00010,00100,01000,10000,11111",
+    "0":"01110,10001,10011,10101,11001,10001,01110", "1":"00100,01100,00100,00100,00100,00100,01110",
+    "2":"01110,10001,00001,00010,00100,01000,11111", "3":"11110,00001,00001,01110,00001,00001,11110",
+    "4":"00010,00110,01010,10010,11111,00010,00010", "5":"11111,10000,11110,00001,00001,10001,01110",
+    "6":"00110,01000,10000,11110,10001,10001,01110", "7":"11111,00001,00010,00100,01000,01000,01000",
+    "8":"01110,10001,10001,01110,10001,10001,01110", "9":"01110,10001,10001,01111,00001,00010,01100",
+    ":":"00000,01100,01100,00000,01100,01100,00000", "-":"00000,00000,00000,11111,00000,00000,00000",
+    " ":"00000,00000,00000,00000,00000,00000,00000"
+  };
+
+  function pixelPath(text, dx, dy) {
+    var d = "";
+    for (var i = 0; i < text.length; i++) {
+      var g = (FONT[text[i]] || FONT[" "]).split(",");
+      for (var y = 0; y < 7; y++) for (var x = 0; x < 5; x++) {
+        if (g[y][x] === "1") d += "M" + (i * 6 + x + dx) + " " + (y + dy) + "h1v1h-1z";
+      }
+    }
+    return d;
+  }
+  function pixelText(text, color, shadow, cls, scale) {
+    var w = text.length * 6 - 1 + 1, h = 8;
+    return '<svg class="' + cls + '" viewBox="0 0 ' + w + ' ' + h + '" width="' + (w * scale) + '" height="' + (h * scale) +
+      '" shape-rendering="crispEdges" aria-hidden="true" focusable="false">' +
+      '<path fill="' + shadow + '" d="' + pixelPath(text, 1, 1) + '"/>' +
+      '<path fill="' + color + '" d="' + pixelPath(text, 0, 0) + '"/></svg>';
+  }
+
+  var title = document.getElementById("title-pixels");
+  if (title) {
+    var scale = window.innerWidth < 520 ? 3 : (window.innerWidth < 900 ? 4 : 6);
+    title.innerHTML = pixelText("CAMPUS CUSTOMS:", "#ff2e97", "#6b1342", "pixel-line", scale) +
+                      pixelText("AGENT ARCADE", "#ffd23f", "#6b4a00", "pixel-line", scale);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-pixel]"), function (el) {
+    el.innerHTML = pixelText(el.getAttribute("data-pixel"), "#ff8cc8", "#6b1342", "level-pixel", 3);
+  });
+
+  /* ------------------------------------------------------------------
+     Original pixel-art placeholder sprites (16x16). Each letter is a palette colour; "." is transparent.
+  ------------------------------------------------------------------ */
+  var SPRITES = {
+    mario: { pal: { R:"#e8333f", r:"#9e1b26", W:"#ffffff", S:"#ffc79a", s:"#e59a6a", K:"#1a1014", H:"#6b3a1e", B:"#2f5fe0", Y:"#ffd23f" },
+      rows: ["....RRRRRRRR....", "...RRRRWWRRRR...", "..RRRRWWWWRRRR..", "..rrrrrrrrrrrr..",
+             "...HSSSSSSSSH...", "...SSKSSSSKSS...", "...SSKSSSSKSS...", "..sSSSSSSSSSSs..",
+             "...SKKKKKKKKS...", "....SSSKKSSS....", "...RRRBBBBRRR...", "..RRRBYBBYBRRR..",
+             "..SSBBBBBBBBSS..", "....BBBBBBBB....", "....BBB..BBB....", "...HHHH..HHHH..."] },
+    crash: { pal: { O:"#ff8a1f", o:"#c25a0a", T:"#ffd9a0", K:"#1a1014", W:"#ffffff", G:"#3ddc84", B:"#2f5fe0", R:"#e8333f" },
+      rows: ["......K.K.......", ".....OKOKO......", "....OOOOOOOO....", "...OOOOOOOOOO...",
+             "..OOWWGOOWWGOO..", "..OOWWKOOWWKOO..", "..OOOOOKKOOOOO..", "...OTTTTTTTTO...",
+             "...OTKWWWWKTO...", "....TTTTTTTT....", "...OOOOOOOOOO...", "..OOOOTTTTOOOO..",
+             "..TT.BBBBBB.TT..", ".....BBBBBB.....", ".....BB..BB.....", "....RRR..RRR...."] },
+    spyro: { pal: { P:"#9b5cff", p:"#5e2fb0", Y:"#ffcf3f", W:"#ffffff", K:"#1a1014" },
+      rows: ["..Y........Y....", "..YY......YY....", "...PY....YP.....", "...PPPPPPPP.....",
+             "..PPPPPPPPPP....", "..PWKPPPPWKP....", "..PPPPPPPPPPPP..", "..PPPPPPPYYPPPP.",
+             "...PPPPPPPPPPP..", "YY..PPPPPPPP..YY", "YYY.PYYYYYYP.YYY", ".YYPPYYYYYYPPYY.",
+             "...PPPPPPPPPP...", "...PP.PPPP.PP...", "..pp...pp...pp..", "................"] },
+    ryu: { pal: { K:"#1a1014", R:"#e8333f", S:"#f2c08f", W:"#f4f4f4", w:"#c9c9d6", k:"#2a2a2a" },
+      rows: ["....KKKKKKKK....", "...KKKKKKKKKK...", "...RRRRRRRRRRRR.", "...SSSSSSSSSS.RR",
+             "...SKKSSSSKKS..R", "...SSSSSSSSSS...", "....SSSKKSSS....", ".....SSSSSS.....",
+             "..WWWWSSSSWWWW..", ".WWWWWWSSWWWWWW.", ".SSWWWWWWWWWWSS.", ".SSwWWWWWWWWwSS.",
+             "...kkkkkkkkkk...", "...WWWWWWWWWW...", "...WWWW..WWWW...", "...SSS....SSS..."] },
+    sonic: { pal: { B:"#2f6bff", b:"#1b3d99", T:"#ffcf9a", W:"#ffffff", G:"#3ddc84", K:"#1a1014", R:"#e8333f" },
+      rows: ["......BBB.......", "...BBBBBBBB.....", ".BBBBBBBBBBB....", "BBBBBBBBBBBBB...",
+             "..BBBWWWWWWBB...", ".BBBWGKWWGKWB...", "BBBBWGKWWGKWB...", "..BBTTTTTTTTB...",
+             "...BTTTKKTTT....", "....TTTTTTTT....", "...BBBTTTTBBB...", "..TBBBTTTTBBBT..",
+             "....BBBBBBBB....", "....BB....BB....", "...RRRW..RRRW...", "..RRRRW..RRRRW.."] }
+  };
+  function spriteSvg(name) {
+    var s = SPRITES[name]; if (!s) return "";
+    var out = '<svg viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false">';
+    s.rows.forEach(function (row, y) {
+      var x = 0;
+      while (x < 16) {
+        var c = row[x] || ".", run = 1;
+        while (x + run < 16 && (row[x + run] || ".") === c) run++;
+        if (c !== "." && s.pal[c]) out += '<rect x="' + x + '" y="' + y + '" width="' + run + '" height="1" fill="' + s.pal[c] + '"/>';
+        x += run;
+      }
+    });
+    return out + "</svg>";
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-sprite]"), function (el) {
+    el.innerHTML = spriteSvg(el.getAttribute("data-sprite"));
+  });
+
+  /* Locked arcade gate (bars + padlock). */
+  var GATE = '<svg viewBox="0 0 22 22" shape-rendering="crispEdges" aria-hidden="true" focusable="false">' +
+    '<rect x="1" y="1" width="20" height="2" fill="#ff2e97"/><rect x="1" y="19" width="20" height="2" fill="#ff2e97"/>' +
+    '<rect x="2" y="3" width="2" height="16" fill="#6b1342"/><rect x="7" y="3" width="2" height="16" fill="#6b1342"/>' +
+    '<rect x="13" y="3" width="2" height="16" fill="#6b1342"/><rect x="18" y="3" width="2" height="16" fill="#6b1342"/>' +
+    '<rect x="8" y="7" width="6" height="2" fill="#ffd23f"/><rect x="7" y="8" width="2" height="4" fill="#ffd23f"/>' +
+    '<rect x="13" y="8" width="2" height="4" fill="#ffd23f"/><rect x="6" y="11" width="10" height="7" fill="#ffd23f"/>' +
+    '<rect x="10" y="13" width="2" height="3" fill="#6b4a00"/></svg>';
+  Array.prototype.forEach.call(document.querySelectorAll(".gate-art"), function (el) { el.innerHTML = GATE; });
+
+  /* ------------------------------------------------------------------
+     Tabs: Ticket 101, Ticket 102, Ticket 103, Cash, Reflection.
+  ------------------------------------------------------------------ */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  var HASH = { "ticket-101": "tab-101", "ticket-102": "tab-102", "ticket-103": "tab-103", "cash": "tab-cash", "reflection": "tab-reflection" };
+
+  function selectTab(tab, focus) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      var panel = document.getElementById(t.getAttribute("aria-controls"));
+      if (on) {
+        panel.hidden = false;
+        panel.classList.remove("entering"); void panel.offsetWidth; panel.classList.add("entering");
+      } else {
+        panel.hidden = true;
+      }
+    });
+    if (focus) tab.focus();
+    var key = Object.keys(HASH).filter(function (k) { return HASH[k] === tab.id; })[0];
+    if (key && history.replaceState) history.replaceState(null, "", "#" + key);
+  }
+  tabs.forEach(function (tab, i) {
+    tab.addEventListener("click", function () { selectTab(tab, false); });
+    tab.addEventListener("keydown", function (e) {
+      var n = null;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") n = (i + 1) % tabs.length;
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") n = (i - 1 + tabs.length) % tabs.length;
+      else if (e.key === "Home") n = 0;
+      else if (e.key === "End") n = tabs.length - 1;
+      if (n !== null) { e.preventDefault(); selectTab(tabs[n], true); }
+    });
+  });
+  var start = HASH[(location.hash || "").replace("#", "")];
+  if (start) selectTab(document.getElementById(start), false);
+
+  /* ------------------------------------------------------------------
+     Dialog box + screen-reader announcements.
+  ------------------------------------------------------------------ */
+  var LINES = {
+    "mario": ["MARIO", "“It's-a me, Mario!” Boss agent: I pick who goes first and keep the mission on track."],
+    "crash": ["CRASH", "WOAH! Inventory agent: I check the crates, spot shortages and chase restocks."],
+    "spyro": ["SPYRO", "Accounting agent: I guard the treasure. Balances, invoices, discounts, approval requests."],
+    "ryu":   ["RYU", "Hadouken! Facilities agent: I check leases and rent notices, then hand payments to Accounting."],
+    "sonic": ["SONIC", "Customer Service agent: I write fast, accurate replies from confirmed facts only."],
+    "crash-shortage-101": ["CRASH", "WOAH! Size S tee: 0 on hand, 1 requested. (From the database.)"],
+    "crash-shortage-103": ["CRASH", "WOAH! Size M hoodies: 8 on hand, 20 requested. (From the database.)"],
+    "overdue-101": ["SYSTEM", "Invoice 501 to Bulldog Print Co is $840.00 and 3 days overdue. (From the database.)"],
+    "approval-101": ["SPYRO", "Gate locked: paying the $840 invoice needs a human's approval. Nothing is approved yet."],
+    "approval-102": ["SPYRO", "Gate locked: the $2,400 rent payment needs a human's approval. Nothing is approved yet."],
+    "approval-103": ["SPYRO", "Gate locked: any discount needs authorization before it is a confirmed offer."],
+    "start": ["SYSTEM", "PLAYER 1 READY. Pick a level in Mission Select."]
+  };
+  var dWho = document.getElementById("dialog-who"), dText = document.getElementById("dialog-text"),
+      live = document.getElementById("live"), typer = null;
+  function say(key) {
+    var line = LINES[key]; if (!line) return;
+    dWho.textContent = line[0];
+    live.textContent = line[0] + ": " + line[1];
+    if (typer) clearInterval(typer);
+    if (reduceMotion.matches) { dText.textContent = line[1]; return; }
+    var i = 0; dText.textContent = "";
+    typer = setInterval(function () {
+      i += 2; dText.textContent = line[1].slice(0, i);
+      if (i >= line[1].length) { clearInterval(typer); typer = null; }
+    }, 16);
+  }
+  var toastEl = document.getElementById("toast"), toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg; toastEl.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2400);
+  }
+
+  /* ------------------------------------------------------------------
+     Sound. Muted by default; nothing plays until the user turns sound on and clicks something.
+     Only one sound plays at a time. Sounds play only on a deliberate click.
+
+     AUDIO_CLIPS: paste data: URIs here for clips you are allowed to use (for example
+     'mario.intro': 'data:audio/mpeg;base64,...'). Any id left empty uses the synth placeholder.
+  ------------------------------------------------------------------ */
+  var AUDIO_CLIPS = {
+    "mario.intro": "", "mario.coin": "", "mario.fanfare": "",
+    "crash.woah": "", "crash.crate": "", "crash.fruit": "",
+    "spyro.gem": "", "spyro.approval": "", "spyro.treasure": "",
+    "ryu.hadouken": "", "ryu.impact": "", "ryu.victory": "",
+    "sonic.ring": "", "sonic.warn": "", "sonic.complete": ""
+  };
+  var sfx = { ctx: null, master: null, bus: null, el: null, muted: true };
+
+  function ensureCtx() {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!sfx.ctx) {
+      sfx.ctx = new AC();
+      sfx.master = sfx.ctx.createGain();
+      sfx.master.gain.value = 0.16;
+      sfx.master.connect(sfx.ctx.destination);
+    }
+    if (sfx.ctx.state === "suspended") sfx.ctx.resume();
+    return sfx.ctx;
+  }
+  function stopCurrent() {
+    if (sfx.bus) {
+      var b = sfx.bus, t = sfx.ctx.currentTime;
+      b.gain.cancelScheduledValues(t); b.gain.setValueAtTime(b.gain.value, t); b.gain.linearRampToValueAtTime(0, t + 0.02);
+      setTimeout(function () { b.disconnect(); }, 60);
+      sfx.bus = null;
+    }
+    if (sfx.el) { sfx.el.pause(); sfx.el = null; }
+  }
+  function tone(ctx, out, t, o) {
+    var osc = ctx.createOscillator(), v = ctx.createGain(), d = o.d || 0.1;
+    osc.type = o.type || "square";
+    osc.frequency.setValueAtTime(o.f, t);
+    if (o.f2) osc.frequency.exponentialRampToValueAtTime(o.f2, t + d);
+    v.gain.setValueAtTime(0.0001, t);
+    v.gain.exponentialRampToValueAtTime(o.g || 0.5, t + (o.a || 0.005));
+    v.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    osc.connect(v); v.connect(out);
+    osc.start(t); osc.stop(t + d + 0.03);
+  }
+  function noise(ctx, out, t, o) {
+    var d = o.d || 0.15, len = Math.ceil(ctx.sampleRate * d), buf = ctx.createBuffer(1, len, ctx.sampleRate), ch = buf.getChannelData(0);
+    for (var i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+    var src = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), v = ctx.createGain();
+    src.buffer = buf; fl.type = o.type || "bandpass"; fl.Q.value = o.q || 1;
+    fl.frequency.setValueAtTime(o.f || 1500, t);
+    if (o.f2) fl.frequency.exponentialRampToValueAtTime(o.f2, t + d);
+    v.gain.setValueAtTime(o.g || 0.5, t); v.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    src.connect(fl); fl.connect(v); v.connect(out);
+    src.start(t); src.stop(t + d + 0.03);
+  }
+  function seq(ctx, out, t, freqs, step, o) {
+    freqs.forEach(function (f, i) { tone(ctx, out, t + i * step, { f: f, d: o.d || step * 1.1, type: o.type, g: o.g }); });
+  }
+  /* Original synth placeholders: short (under ~1 s) and not copies of any game recording. */
+  var SYNTH = {
+    "mario.intro":   function (c, o, t) { seq(c, o, t, [523, 659, 784, 1047], 0.08, { type: "square", g: 0.35 }); tone(c, o, t + 0.34, { f: 1319, d: 0.28, type: "square", g: 0.3 }); },
+    "mario.coin":    function (c, o, t) { tone(c, o, t, { f: 880, d: 0.06, g: 0.4 }); tone(c, o, t + 0.06, { f: 1175, d: 0.32, g: 0.35 }); },
+    "mario.fanfare": function (c, o, t) { seq(c, o, t, [392, 523, 659, 784, 659, 784], 0.1, { type: "square", g: 0.3 }); tone(c, o, t + 0.6, { f: 1047, d: 0.35, type: "triangle", g: 0.45 }); },
+    "crash.woah":    function (c, o, t) { tone(c, o, t, { f: 560, f2: 190, d: 0.5, type: "sawtooth", g: 0.28, a: 0.03 }); tone(c, o, t, { f: 280, f2: 95, d: 0.5, type: "triangle", g: 0.3, a: 0.03 }); },
+    "crash.crate":   function (c, o, t) { noise(c, o, t, { d: 0.14, f: 1800, q: 0.8, g: 0.8 }); tone(c, o, t, { f: 140, f2: 60, d: 0.16, type: "sine", g: 0.6 }); noise(c, o, t + 0.07, { d: 0.1, f: 3200, q: 1.5, g: 0.4 }); },
+    "crash.fruit":   function (c, o, t) { tone(c, o, t, { f: 600, f2: 1200, d: 0.1, type: "sine", g: 0.45 }); tone(c, o, t + 0.1, { f: 1500, d: 0.18, type: "sine", g: 0.35 }); },
+    "spyro.gem":     function (c, o, t) { seq(c, o, t, [1319, 1661, 1976, 2637], 0.05, { type: "triangle", d: 0.25, g: 0.35 }); },
+    "spyro.approval":function (c, o, t) { seq(c, o, t, [440, 330, 440, 330], 0.11, { type: "square", g: 0.3 }); },
+    "spyro.treasure":function (c, o, t) { [523, 659, 784].forEach(function (f) { tone(c, o, t, { f: f, d: 0.5, type: "triangle", g: 0.25 }); }); seq(c, o, t + 0.2, [2093, 2637, 3136], 0.06, { type: "sine", d: 0.2, g: 0.15 }); },
+    "ryu.hadouken":  function (c, o, t) { noise(c, o, t, { d: 0.4, f: 300, f2: 2400, q: 2, g: 0.6 }); tone(c, o, t, { f: 120, f2: 55, d: 0.4, type: "sawtooth", g: 0.22, a: 0.02 }); },
+    "ryu.impact":    function (c, o, t) { noise(c, o, t, { d: 0.12, type: "lowpass", f: 1200, g: 0.9 }); tone(c, o, t, { f: 95, f2: 38, d: 0.2, type: "sine", g: 0.8 }); },
+    "ryu.victory":   function (c, o, t) { seq(c, o, t, [587, 740, 880, 1175], 0.09, { type: "square", g: 0.3 }); tone(c, o, t + 0.38, { f: 1175, d: 0.3, type: "square", g: 0.28 }); },
+    "sonic.ring":    function (c, o, t) { tone(c, o, t, { f: 1568, d: 0.07, type: "square", g: 0.3 }); tone(c, o, t + 0.07, { f: 2093, d: 0.35, type: "square", g: 0.25 }); },
+    "sonic.warn":    function (c, o, t) { seq(c, o, t, [1000, 1000, 1000], 0.08, { type: "square", d: 0.05, g: 0.3 }); },
+    "sonic.complete":function (c, o, t) { seq(c, o, t, [1047, 1319, 1568], 0.07, { type: "sine", d: 0.18, g: 0.4 }); }
+  };
+
+  function play(id) {
+    if (sfx.muted) return false;
+    stopCurrent();
+    if (AUDIO_CLIPS[id]) {
+      sfx.el = new Audio(AUDIO_CLIPS[id]); sfx.el.volume = 0.6;
+      var p = sfx.el.play(); if (p && p.catch) p.catch(function () {});
+      return true;
+    }
+    var ctx = ensureCtx(); if (!ctx || !SYNTH[id]) return false;
+    var bus = ctx.createGain(); bus.connect(sfx.master); sfx.bus = bus;
+    SYNTH[id](ctx, bus, ctx.currentTime + 0.01);
+    return true;
+  }
+
+  var soundBtn = document.getElementById("sound-toggle");
+  soundBtn.addEventListener("click", function () {
+    sfx.muted = !sfx.muted;
+    soundBtn.setAttribute("aria-pressed", sfx.muted ? "false" : "true");
+    soundBtn.textContent = sfx.muted ? "Sound: Off" : "Sound: On";
+    if (sfx.muted) stopCurrent(); else ensureCtx();
+    toast(sfx.muted ? "Sound off." : "Sound on. Click a portrait to preview.");
+  });
+
+  var mutedHintShown = false;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-sound]"), function (el) {
+    el.addEventListener("click", function () {
+      var line = el.getAttribute("data-line");
+      if (line) say(line);
+      var portrait = el.classList.contains("portrait") ? el : null;
+      if (portrait && !reduceMotion.matches) {
+        portrait.classList.remove("hop"); void portrait.offsetWidth; portrait.classList.add("hop");
+      }
+      if (!play(el.getAttribute("data-sound")) && sfx.muted && !mutedHintShown) {
+        mutedHintShown = true;
+        toast("Sound is off. Press “Sound: Off” to hear previews.");
+      }
+    });
+  });
+
+  document.getElementById("press-start").addEventListener("click", function () {
+    say("start");
+    play("mario.intro");
+    document.getElementById("missions").scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth" });
+    var sel = tabs.filter(function (t) { return t.getAttribute("aria-selected") === "true"; })[0];
+    if (sel) sel.focus({ preventScroll: true });
+  });
+
+  /* ------------------------------------------------------------------
+     Command network.
+     Problem 6 draws only the EXPECTED routes listed in each <ul class="net-routes">.
+     For a later problem, window.AgentArcade.network("101") returns a controller that real
+     audit events can drive (applyAuditEvents). Nothing on this page calls it with events.
+  ------------------------------------------------------------------ */
+  var NET_AGENTS = {
+    mario: { name: "Mario", role: "Boss", x: 500, y: 90, w: 170, h: 150, color: "#ff5468", sound: "mario.intro",
+      resp: "Reads the ticket, decides which specialist to call first, delegates tasks, and coordinates the overall resolution." },
+    crash: { name: "Crash Bandicoot", short: "Crash", role: "Inventory", x: 130, y: 410, w: 150, h: 150, color: "#ff8a3d", sound: "crash.crate",
+      resp: "Checks stock, identifies shortages, and investigates restocking and supplier problems." },
+    spyro: { name: "Spyro", role: "Accounting", x: 380, y: 410, w: 150, h: 150, color: "#b07cff", sound: "spyro.gem",
+      resp: "Checks balances, reviews invoices, evaluates discounts, and prepares approval requests for a human." },
+    ryu:   { name: "Ryu", role: "Facilities", x: 620, y: 410, w: 150, h: 150, color: "#f2f2f2", sound: "ryu.hadouken",
+      resp: "Verifies lease details, investigates rent notices, and coordinates with Accounting when a facilities issue needs payment." },
+    sonic: { name: "Sonic", role: "Customer Service", x: 870, y: 410, w: 150, h: 150, color: "#4d94ff", sound: "sonic.ring",
+      resp: "Prepares accurate customer responses from information the other agents have confirmed." }
+  };
+  var SPECIALISTS = ["crash", "spyro", "ryu", "sonic"];
+  var AGENT_IDS = { boss: "mario", inventory: "crash", accounting: "spyro", facilities: "ryu", customer_service: "sonic" };
+  var SVGNS = "http://www.w3.org/2000/svg";
+  var LOCK_RECTS = '<rect x="2" y="0" width="6" height="2" fill="#ffd23f"/><rect x="1" y="1" width="2" height="4" fill="#ffd23f"/>' +
+    '<rect x="7" y="1" width="2" height="4" fill="#ffd23f"/><rect x="0" y="5" width="10" height="7" fill="#ffd23f"/>' +
+    '<rect x="4" y="7" width="2" height="3" fill="#6b4a00"/>';
+  var LOCK_SVG = '<svg viewBox="0 0 10 12" shape-rendering="crispEdges" aria-hidden="true" focusable="false">' + LOCK_RECTS + "</svg>";
+
+  function agentLabel(id) { var a = NET_AGENTS[id]; return a.name + " (" + a.role + ")"; }
+  function shortName(id) { return NET_AGENTS[id].short || NET_AGENTS[id].name; }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function el(tag, attrs, parent) {
+    var n = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+
+  /* Circuit-style routes. Boss links drop from Mario on separate lanes; neighbouring specialists use a
+     straight lane (left-to-right above, right-to-left below); other specialist pairs loop underneath. */
+  function routePoints(a, b) {
+    var A = NET_AGENTS[a], B = NET_AGENTS[b];
+    if (a === "mario") {
+      var off = { crash: -60, spyro: -20, ryu: 20, sonic: 60 }[b], bus = { crash: 225, sonic: 225, spyro: 275, ryu: 275 }[b];
+      return [[500 + off, 165], [500 + off, bus], [B.x, bus], [B.x, 335]];
+    }
+    if (b === "mario") {
+      return routePoints("mario", a).map(function (q) { return [q[0] + 12, q[1] === 165 || q[1] === 335 ? q[1] : q[1] + 12]; }).reverse();
+    }
+    var ia = SPECIALISTS.indexOf(a), ib = SPECIALISTS.indexOf(b), dir = ib > ia ? 1 : -1;
+    if (Math.abs(ia - ib) === 1) {
+      var lane = dir > 0 ? 395 : 425;
+      return [[A.x + 75 * dir, lane], [B.x - 75 * dir, lane]];
+    }
+    var depth = { "0-2": 528, "1-3": 556, "0-3": 584 }[Math.min(ia, ib) + "-" + Math.max(ia, ib)];
+    var o = dir > 0 ? -14 : 14, d2 = dir > 0 ? 0 : 8;
+    return [[A.x + o, 485], [A.x + o, depth + d2], [B.x + o, depth + d2], [B.x + o, 485]];
+  }
+  function pathD(pts) { return pts.map(function (p, i) { return (i ? "L" : "M") + p[0] + " " + p[1]; }).join(" "); }
+
+  function NetworkView(block) {
+    var self = this;
+    this.block = block;
+    this.id = block.getAttribute("data-ticket") || block.getAttribute("data-network");
+    this.edges = {};
+    this.nodes = {};
+    this.H = 510;
+    this.demoRunning = false;
+    this.expected = Array.prototype.map.call(block.querySelectorAll(".net-routes li"), function (li) {
+      var t = li.textContent.replace(/\s+/g, " ").trim();
+      return { from: li.getAttribute("data-from"), to: li.getAttribute("data-to"), kind: li.getAttribute("data-kind"),
+               step: li.getAttribute("data-step"), condition: li.getAttribute("data-condition") || "",
+               why: t.slice(t.indexOf(": ") + 2) };
+    });
+    var outEl = block.querySelector(".net-out");
+    this.out = outEl ? outEl.getAttribute("data-out").split(/\s+/).filter(Boolean) : [];
+    this.gateAgent = block.getAttribute("data-gate");
+    var gt = block.querySelector(".net-gate-text");
+    this.gateText = gt ? gt.textContent.trim() : "";
+
+    var grid = document.createElement("div");
+    grid.className = "net-grid";
+    grid.innerHTML =
+      '<div><div class="net-scroll"><div class="net-stage">' +
+      '<p class="demo-banner" hidden>Demo preview · not a real agent run</p></div></div>' +
+      '<p class="scroll-hint">Swipe sideways to see the whole network.</p></div>' +
+      '<div class="net-side"><div class="net-info" aria-live="polite"></div></div><div class="net-legend"></div>';
+    block.appendChild(grid);
+    this.stage = grid.querySelector(".net-stage");
+    this.banner = grid.querySelector(".demo-banner");
+    this.info = grid.querySelector(".net-info");
+    this.svg = el("svg", { "class": "net-svg", viewBox: "0 0 1000 510", role: "group",
+      "aria-label": "Delegation connections for ticket " + this.id + ". Connections that are part of the plan can be selected." });
+    this.stage.insertBefore(this.svg, this.stage.firstChild);
+    this.edgeLayer = el("g", {}, this.svg);
+
+    Object.keys(NET_AGENTS).forEach(function (id) { self.buildNode(id); });
+    this.buildLegend(grid.querySelector(".net-legend"));
+    this.reset();
+    this.showDefault();
+
+    var demo = block.querySelector("[data-demo]");
+    if (demo) demo.addEventListener("click", function () { self.runDemo(demo); });
+  }
+  /* On narrow screens the map scrolls sideways; start centred on Mario. */
+  NetworkView.prototype.centre = function () {
+    var sc = this.stage.parentNode;
+    if (sc.scrollWidth > sc.clientWidth) sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2;
+  };
+
+  NetworkView.prototype.buildNode = function (id) {
+    var self = this, a = NET_AGENTS[id], b = document.createElement("button");
+    b.type = "button";
+    b.className = "node";
+    b.setAttribute("data-agent", id);
+    b.innerHTML = '<span class="node-tool" hidden></span><span class="node-sprite">' + spriteSvg(id) + "</span>" +
+      '<span class="node-name">' + shortName(id) + '</span><span class="node-role">' + a.role + "</span>" +
+      '<span class="node-tag" hidden>Sitting out</span>' +
+      '<span class="gate-badge" title="Human approval gate" hidden>' + LOCK_SVG + "</span>";
+    this.stage.appendChild(b);
+    this.nodes[id] = b;
+    var show = function () { self.select(b); self.showNode(id); };
+    b.addEventListener("mouseenter", show);
+    b.addEventListener("focus", show);
+    b.addEventListener("click", function () {
+      show();
+      if (!play(a.sound) && sfx.muted && !mutedHintShown) { mutedHintShown = true; toast("Sound is off. Press “Sound: Off” to hear previews."); }
+    });
+  };
+
+  NetworkView.prototype.layout = function () {
+    var H = this.H, self = this;
+    this.svg.setAttribute("viewBox", "0 0 1000 " + H);
+    this.stage.classList.toggle("tall", H > 510);
+    Object.keys(this.nodes).forEach(function (id) {
+      var a = NET_AGENTS[id], n = self.nodes[id];
+      n.style.left = (a.x / 10) + "%"; n.style.top = (a.y / H * 100) + "%";
+      n.style.width = (a.w / 10) + "%"; n.style.height = (a.h / H * 100) + "%";
+    });
+  };
+
+  NetworkView.prototype.ensureEdge = function (from, to) {
+    var key = from + ">" + to;
+    if (this.edges[key]) return this.edges[key];
+    var self = this, pts = routePoints(from, to), last = pts[pts.length - 1], prev = pts[pts.length - 2];
+    var dx = Math.sign(last[0] - prev[0]), dy = Math.sign(last[1] - prev[1]);
+    var linePts = pts.slice(0, -1).concat([[last[0] - dx * 10, last[1] - dy * 10]]);
+    var d = pathD(linePts), maxY = Math.max.apply(null, pts.map(function (p) { return p[1]; }));
+    if (maxY > 500 && this.H < 600) { this.H = 600; this.layout(); }
+
+    var g = el("g", { "class": "edge s-idle", "data-from": from, "data-to": to }, this.edgeLayer);
+    g.style.setProperty("--edge-color", NET_AGENTS[to].color);
+    var line = el("path", { "class": "line", d: d }, g);
+    var hit = el("path", { "class": "hit", d: d }, g);
+    // Arrowhead pointing in the direction of delegation.
+    var tip = last, px = -dy, py = dx, bx = last[0] - dx * 14, by = last[1] - dy * 14;
+    el("polygon", { "class": "head", points: tip[0] + "," + tip[1] + " " + (bx + px * 8) + "," + (by + py * 8) + " " + (bx - px * 8) + "," + (by - py * 8) }, g);
+    var pulse = el("circle", { "class": "pulse", r: 6 }, g);
+    if (!reduceMotion.matches) {
+      var len = linePts.reduce(function (s, p, i) { return i ? s + Math.abs(p[0] - linePts[i - 1][0]) + Math.abs(p[1] - linePts[i - 1][1]) : 0; }, 0);
+      el("animateMotion", { path: d, dur: Math.max(0.7, len / 280).toFixed(2) + "s", repeatCount: "indefinite" }, pulse);
+    }
+    var lock = el("g", { "class": "lock", transform: "translate(" + (bx - 10 + py * 14) + "," + (by - 12 - px * 14) + ") scale(2)" }, g);
+    lock.innerHTML = LOCK_RECTS;
+    var edge = { key: key, from: from, to: to, g: g, state: "idle", plan: null };
+    hit.addEventListener("click", function () { self.select(g); self.showEdge(edge); });
+    g.addEventListener("focus", function () { self.select(g); self.showEdge(edge); });
+    g.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); self.select(g); self.showEdge(edge); }
+    });
+    this.edges[key] = edge;
+    return edge;
+  };
+
+  NetworkView.prototype.addBadge = function (edge, step, conditional) {
+    var pts = routePoints(edge.from, edge.to), x, y;
+    if (pts.length === 2) { x = (pts[0][0] + pts[1][0]) / 2; y = pts[0][1] + (pts[0][1] < 410 ? -24 : 24); }
+    else { x = (pts[1][0] + pts[2][0]) / 2; y = pts[1][1]; }
+    var g = el("g", { "class": "badge", "aria-hidden": "true" }, edge.g);
+    el("rect", { x: x - 13, y: y - 13, width: 26, height: 26 }, g);
+    el("text", { x: x, y: y + 1 }, g).textContent = step;
+    if (conditional) el("text", { "class": "cond-label", x: x, y: y - 22, "aria-hidden": "true" }, edge.g).textContent = "IF NEEDED";
+  };
+
+  NetworkView.prototype.setEdge = function (from, to, state) {
+    var e = this.ensureEdge(from, to);
+    e.state = state;
+    e.g.setAttribute("class", "edge s-" + state + (e.plan && e.plan.kind === "conditional" ? " conditional" : "") +
+      (e.g.classList.contains("selected") ? " selected" : ""));
+    var focusable = state !== "idle" && state !== "none";
+    if (focusable) { e.g.setAttribute("tabindex", "0"); e.g.setAttribute("role", "button"); e.g.setAttribute("aria-label", this.edgeLabel(e)); }
+    else { e.g.removeAttribute("tabindex"); e.g.removeAttribute("role"); e.g.removeAttribute("aria-label"); }
+    return e;
+  };
+  NetworkView.prototype.edgeLabel = function (e) {
+    var p = e.plan;
+    return (p ? "Step " + p.step + ": " : "") + agentLabel(e.from) + " delegates to " + agentLabel(e.to) +
+      (p && p.kind === "conditional" ? ", " + p.condition : "") + ". State: " + e.state + ".";
+  };
+  NetworkView.prototype.flashError = function (from, to) {
+    var e = this.ensureEdge(from, to);
+    e.g.classList.add("flash-error");
+    setTimeout(function () { e.g.classList.remove("flash-error"); }, 1000);
+  };
+  NetworkView.prototype.setNode = function (id, state) {
+    var n = this.nodes[id]; if (!n) return;
+    n.classList.remove("n-out", "n-working", "n-done", "n-waiting", "n-expected");
+    if (state) n.classList.add("n-" + state);
+    n.querySelector(".node-tag").hidden = state !== "out";
+    var part = state === "out" ? "Not expected on this mission." : "Expected on this mission.";
+    n.setAttribute("aria-label", agentLabel(id) + ". " + part + " Select for details and a sound preview.");
+  };
+  NetworkView.prototype.showTool = function (id, tool) {
+    var t = this.nodes[id] && this.nodes[id].querySelector(".node-tool"); if (!t) return;
+    t.hidden = !tool; t.textContent = tool || "";
+  };
+  NetworkView.prototype.showApproval = function (id, text) {
+    this.setNode(id, "waiting");
+    this.nodes[id].querySelector(".gate-badge").hidden = false;
+    if (text) this.nodes[id].querySelector(".gate-badge").title = text;
+  };
+
+  /* Back to the expected plan: planned routes glow, uninvolved agents are dimmed, the rest is idle. */
+  NetworkView.prototype.reset = function () {
+    var self = this;
+    this.edgeLayer.innerHTML = ""; this.edges = {}; this.H = 510; this.layout();
+    var planned = {};
+    this.expected.forEach(function (p) { planned[p.from + ">" + p.to] = planned[p.to + ">" + p.from] = true; });
+    SPECIALISTS.forEach(function (s) { if (!planned["mario>" + s]) self.ensureEdge("mario", s); });
+    [["crash", "spyro"], ["spyro", "ryu"], ["ryu", "sonic"]].forEach(function (pair) {
+      if (!planned[pair[0] + ">" + pair[1]]) self.ensureEdge(pair[0], pair[1]);
+    });
+    Object.keys(this.edges).forEach(function (k) {
+      var e = self.edges[k], out = self.out.indexOf(e.from) >= 0 || self.out.indexOf(e.to) >= 0;
+      self.setEdge(e.from, e.to, out ? "none" : "idle");
+    });
+    this.expected.forEach(function (p) {
+      var e = self.ensureEdge(p.from, p.to);
+      e.plan = p;
+      self.addBadge(e, p.step, p.kind === "conditional");
+      self.setEdge(p.from, p.to, "expected");
+    });
+    Object.keys(this.nodes).forEach(function (id) {
+      self.setNode(id, self.out.indexOf(id) >= 0 ? "out" : "expected");
+      self.showTool(id, null);
+      var gb = self.nodes[id].querySelector(".gate-badge");
+      gb.hidden = id !== self.gateAgent;
+      gb.title = "Human approval gate: " + self.gateText;
+    });
+  };
+
+  NetworkView.prototype.select = function (target) {
+    Array.prototype.forEach.call(this.stage.querySelectorAll(".selected"), function (n) { n.classList.remove("selected"); });
+    target.classList.add("selected");
+  };
+  NetworkView.prototype.showDefault = function () {
+    var self = this;
+    var first = this.expected.filter(function (p) { return p.step === "1"; })[0];
+    this.info.innerHTML = "<h4>Mission control · Ticket " + this.id + "</h4>" +
+      '<p class="hint">Hover, focus or click a character or a connection. Arrows point from the agent who delegates to the agent who receives the task.</p>' +
+      "<p><b>Boss calls first</b><br>" + (first ? agentLabel(first.to) : "None") + "</p>" +
+      "<p><b>Planned delegations</b><br>" + this.expected.length + " (" + this.expected.filter(function (p) { return p.kind === "conditional"; }).length + " conditional)</p>" +
+      "<p><b>Sitting out</b><br>" + (this.out.length ? this.out.map(agentLabel).join(", ") : "Nobody") + "</p>";
+  };
+  NetworkView.prototype.showNode = function (id) {
+    var a = NET_AGENTS[id], self = this, inn = [], outs = [];
+    this.expected.forEach(function (p) {
+      var cond = p.kind === "conditional" ? ", only " + p.condition : "";
+      if (p.to === id) inn.push("Receives from " + shortName(p.from) + " (step " + p.step + cond + ")");
+      if (p.from === id) outs.push("Delegates to " + shortName(p.to) + " (step " + p.step + cond + ")");
+    });
+    var taking = this.out.indexOf(id) < 0;
+    this.info.innerHTML = "<h4>" + a.name + " · " + a.role + "</h4><p>" + a.resp + "</p>" +
+      "<p><b>This mission</b><br>" + (taking ? "Expected to take part." : "Not expected to take part, so dimmed.") + "</p>" +
+      "<p><b>Expected links</b><br>" + (inn.concat(outs).join("<br>") || "None on this mission.") + "</p>" +
+      (id === this.gateAgent ? "<p><b>Human approval gate</b><br>" + this.gateText + "</p>" : "");
+  };
+  NetworkView.prototype.showEdge = function (e) {
+    var p = e.plan;
+    if (!p) {
+      this.info.innerHTML = "<h4>" + shortName(e.from) + " → " + shortName(e.to) + "</h4>" +
+        "<p>No delegation is expected on this route for ticket " + this.id + ". The route exists because any agent can delegate to any other.</p>";
+      return;
+    }
+    this.info.innerHTML = "<h4>Step " + p.step + " · " + shortName(e.from) + " → " + shortName(e.to) + "</h4>" +
+      "<p><b>Delegating</b><br>" + agentLabel(e.from) + "</p><p><b>Receiving the task</b><br>" + agentLabel(e.to) + "</p>" +
+      "<p><b>Why</b><br>" + p.why.charAt(0).toUpperCase() + p.why.slice(1) + "</p>" +
+      "<p><b>Type</b><br>" + (p.kind === "conditional" ? "Conditional: only " + p.condition + "." : "Definite.") + "</p>";
+  };
+
+  NetworkView.prototype.buildLegend = function (box) {
+    var items = [
+      ["idle", "", "Idle", "No traffic on the route"],
+      ["expected", "", "Expected", "Planned delegation"],
+      ["expected", "conditional", "Conditional", "Planned only if needed"],
+      ["active", "", "Active", "Pulse travels toward the receiver"],
+      ["completed", "", "Completed", "Solid, in the receiver's colour"],
+      ["awaiting", "", "Awaiting approval", "Pulsing lock: a human must act"],
+      ["error", "", "Error", "Brief red warning"],
+      ["none", "", "Not involved", "Agent sits out"]
+    ];
+    var html = "<h4>Connection states</h4><ul>";
+    items.forEach(function (it, i) {
+      html += '<li><svg viewBox="0 0 74 18" aria-hidden="true" focusable="false"><g class="edge s-' + it[0] + " " + it[1] + '" style="--edge-color:#b07cff">' +
+        '<path class="line" d="M2 9 H58"/><polygon class="head" points="70,9 56,2 56,16"/>' +
+        '<circle class="pulse" r="4"' + (reduceMotion.matches ? ' cx="40" cy="9"' : "") + ">" +
+        (reduceMotion.matches ? "" : '<animateMotion path="M2 9 H58" dur="1.1s" repeatCount="indefinite"/>') + "</circle>" +
+        '<g class="lock" transform="translate(26,-4) scale(1)">' + LOCK_RECTS + "</g></g></svg>" +
+        "<span><strong>" + it[2] + "</strong><br>" + it[3] + "</span>" +
+        (it[0] === "error" ? '<button type="button" class="flash" data-flash="' + i + '">▶ Flash</button>' : "<span></span>") + "</li>";
+    });
+    box.innerHTML = html + '</ul><p class="demo-note">These are samples of each state. The plan uses only Expected and Conditional; nothing here is a real agent event.</p>';
+    var btn = box.querySelector("[data-flash]");
+    if (btn) btn.addEventListener("click", function () {
+      var g = btn.closest("li").querySelector(".edge");
+      g.classList.add("flash-error"); setTimeout(function () { g.classList.remove("flash-error"); }, 1000);
+    });
+  };
+
+  /* Silent, labelled demo of the animation states along the planned route. Not an agent run. */
+  NetworkView.prototype.runDemo = async function (btn) {
+    if (this.demoRunning) return;
+    this.demoRunning = true; btn.disabled = true; this.banner.hidden = false;
+    var self = this, steps = this.expected.slice().sort(function (a, b) { return a.step - b.step; });
+    var hold = reduceMotion.matches ? 900 : 1500;
+    for (var i = 0; i < steps.length; i++) {
+      var p = steps[i];
+      this.setEdge(p.from, p.to, "active"); this.setNode(p.to, "working");
+      await wait(hold);
+      this.setEdge(p.from, p.to, "expected"); this.setNode(p.to, "expected");
+    }
+    if (this.gateAgent) { this.setNode(this.gateAgent, "waiting"); await wait(hold); }
+    this.reset();
+    this.banner.hidden = true; btn.disabled = false; this.demoRunning = false;
+  };
+
+  /* Compare planned routes with actual ones, e.g. compare([["mario","crash"], ["crash","spyro"]]). */
+  NetworkView.prototype.compare = function (actual) {
+    var self = this, seen = {}, result = { matched: [], missed: [], unexpected: [] };
+    actual.forEach(function (pair) { seen[pair[0] + ">" + pair[1]] = true; });
+    this.expected.forEach(function (p) {
+      var k = p.from + ">" + p.to;
+      if (seen[k]) result.matched.push(k);
+      else { result.missed.push(k); self.ensureEdge(p.from, p.to).g.classList.add("missed"); }
+    });
+    actual.forEach(function (pair) {
+      var k = pair[0] + ">" + pair[1];
+      if (!self.expected.some(function (p) { return p.from + ">" + p.to === k; })) {
+        result.unexpected.push(k);
+        self.ensureEdge(pair[0], pair[1]).g.classList.add("unexpected");
+      }
+    });
+    return result;
+  };
+
+  /* For a later problem: drive the network from real entries of output/audit_trail.json for this ticket. */
+  NetworkView.prototype.applyAuditEvents = function (events) {
+    var self = this, started = {}, pairs = [];
+    var to = function (ev) {
+      var s = typeof ev.delegation === "string" ? ev.delegation : JSON.stringify(ev.delegation || {});
+      var m = s.match(/["']to_agent["']\s*:\s*["'](\w+)["']/);
+      return m ? AGENT_IDS[m[1]] : null;
+    };
+    this.edgeLayer.innerHTML = ""; this.edges = {};
+    Object.keys(this.nodes).forEach(function (id) { self.setNode(id, null); self.showTool(id, null); });
+    events.filter(function (ev) { return String(ev.ticket_id) === self.id; }).forEach(function (ev) {
+      var who = AGENT_IDS[ev.agent], target = to(ev);
+      switch (ev.action) {
+        case "agent_started": started[who] = true; self.setNode(who, "working"); break;
+        case "mcp_tool_call":
+          self.showTool(who, ev.tool);
+          if (/^request_/.test(ev.tool || "")) self.showApproval(who, "Approval request filed with " + ev.tool);
+          break;
+        case "delegation_started": if (target) { self.setEdge(who, target, "active"); pairs.push([who, target]); } break;
+        case "delegation_finished":
+        case "delegation_cached": if (target) self.setEdge(who, target, "completed"); break;
+        case "delegation_refused":
+        case "delegation_failed": if (target) { self.setEdge(who, target, "error"); self.flashError(who, target); } break;
+        case "agent_finished": if (!self.nodes[who].classList.contains("n-waiting")) self.setNode(who, "done"); self.showTool(who, null); break;
+        case "approval_decided":
+          // A person decided a request: the agent that filed it is no longer waiting at the gate.
+          Object.keys(self.nodes).forEach(function (id) {
+            if (!self.nodes[id].classList.contains("n-waiting")) return;
+            self.setNode(id, "done");
+            var gb = self.nodes[id].querySelector(".gate-badge");
+            gb.hidden = false;
+            gb.title = "Request #" + ev.request_id + " " + ev.decision + " by " + ev.decided_by;
+          });
+          break;
+        case "run_finished": Object.keys(self.nodes).forEach(function (id) { if (!started[id]) self.setNode(id, "out"); }); break;
+      }
+    });
+    return pairs;
+  };
+
+  var NETWORKS = {};
+  Array.prototype.forEach.call(document.querySelectorAll("[data-network]"), function (block) {
+    NETWORKS[block.getAttribute("data-network")] = new NetworkView(block);
+  });
+  /* Problem 9: every Actual section embeds the real audit entries of its ticket's run
+     (<script type="application/json" id="actual-events-101">). Draw them with the same network. */
+  Object.keys(NETWORKS).forEach(function (key) {
+    var view = NETWORKS[key], src = view.block.getAttribute("data-events");
+    var node = src && document.getElementById(src);
+    if (!node) return;
+    var pairs = view.applyAuditEvents(JSON.parse(node.textContent));
+    var r = view.compare(pairs);
+    var name = function (k) { var a = k.split(">"); return shortName(a[0]) + " → " + shortName(a[1]); };
+    view.info.innerHTML = "<h4>Actual run · Ticket " + view.id + "</h4>" +
+      "<p class=\"hint\">Drawn from the real audit entries of this ticket's run. Dashed red: planned but not used. Cyan: not in the plan.</p>" +
+      "<p><b>As planned</b><br>" + (r.matched.map(name).join("<br>") || "None") + "</p>" +
+      "<p><b>Planned, not used</b><br>" + (r.missed.map(name).join("<br>") || "None") + "</p>" +
+      "<p><b>Not in the plan</b><br>" + (r.unexpected.map(name).join("<br>") || "None") + "</p>";
+  });
+  var centreAll = function () { Object.keys(NETWORKS).forEach(function (k) { NETWORKS[k].centre(); }); };
+  tabs.forEach(function (t) { t.addEventListener("click", centreAll); });
+  window.addEventListener("resize", centreAll);
+  centreAll();
+  window.AgentArcade = {
+    network: function (ticketId) { return NETWORKS[String(ticketId)]; },
+    agentId: function (name) { return AGENT_IDS[name] || name; }
+  };
+})();
+</script>
+</body>
+</html>

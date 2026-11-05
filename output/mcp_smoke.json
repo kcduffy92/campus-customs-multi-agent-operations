@@ -1,0 +1,116 @@
+{
+  "tests": [
+    {
+      "prompt": "Can you check invoice 501 for Bulldog Print Co? I want to know whether it's overdue, how much we owe, and whether the unpaid invoice is preventing us from getting more shirts.",
+      "tool": "get_vendor_invoice_status",
+      "arguments": {
+        "invoice_id": 501
+      },
+      "output": {
+        "found": true,
+        "today": "2026-08-31",
+        "invoice": {
+          "id": 501,
+          "amount": 840,
+          "due_date": "2026-08-28",
+          "status": "open",
+          "description": "Rush reprint CC-TEE-WHITE S",
+          "days_past_due": 3,
+          "is_overdue": true
+        },
+        "vendor": {
+          "id": 1,
+          "found": true,
+          "name": "Bulldog Print Co",
+          "specialty": "apparel reprint",
+          "lead_days": 5
+        },
+        "vendor_open_invoices": [
+          {
+            "id": 501,
+            "amount": 840,
+            "due_date": "2026-08-28"
+          }
+        ],
+        "vendor_blocked_from_shipping": true
+      },
+      "matches_database": true,
+      "checked_fields": 12,
+      "mismatches": []
+    },
+    {
+      "prompt": "Can you check our upcoming rent payment? I want to know how much is due, when it's due, and whether we have enough money in checking to cover it.",
+      "tool": "check_rent_due",
+      "arguments": {
+        "lease_id": 1
+      },
+      "output": {
+        "found": true,
+        "today": "2026-08-31",
+        "lease": {
+          "id": 1,
+          "space_name": "Chapel Street shop",
+          "landlord": "Elm City Properties",
+          "monthly_rent": 2400,
+          "next_due": "2026-09-02",
+          "notes": null,
+          "days_until_due": 2,
+          "is_overdue": false
+        },
+        "cash_accounts": [
+          {
+            "name": "checking",
+            "balance": 3400,
+            "as_of": "2026-08-31",
+            "covers_rent": true,
+            "balance_after_rent": 1000
+          }
+        ],
+        "any_account_covers_rent": true
+      },
+      "matches_database": true,
+      "checked_fields": 12,
+      "mismatches": []
+    },
+    {
+      "prompt": "The Yale AI Club wants to order 20 medium hoodies. Can you check how many we currently have in stock, how many more we'd need to fulfill the order, and what the total retail price and cost to the business would be?",
+      "tool": "check_stock_and_pricing",
+      "arguments": {
+        "sku": "CC-HOOD-NAVY",
+        "size": "M",
+        "requested_quantity": 20
+      },
+      "output": {
+        "found": true,
+        "sku": "CC-HOOD-NAVY",
+        "name": "Basic Hoodie Big Yale",
+        "size": "M",
+        "qty_on_hand": 8,
+        "in_stock": true,
+        "location": "Aisle A",
+        "pricing_found": true,
+        "unit_cost": 22,
+        "list_price": 58,
+        "order": {
+          "requested_quantity": 20,
+          "can_fill_from_stock": false,
+          "shortage": 12,
+          "total_at_list_price": 1160,
+          "total_at_unit_cost": 440
+        }
+      },
+      "matches_database": true,
+      "checked_fields": 13,
+      "mismatches": []
+    }
+  ],
+  "verification": {
+    "script": "tests/verify_mcp_smoke.py",
+    "all_outputs_match_database": true,
+    "database_sha256": {
+      "campus_customs.db": "23686a90d698f7fa6f901a3f0a9774db9cbb31e13151c9e5717275f3321f360a",
+      "campus_customs_new.db": "23686a90d698f7fa6f901a3f0a9774db9cbb31e13151c9e5717275f3321f360a"
+    },
+    "databases_identical": true
+  }
+}

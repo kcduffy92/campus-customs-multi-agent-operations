@@ -1,0 +1,11 @@
+# Problem 3: MCP server. sqlite3 ships with Python's standard library, so it is not listed.
+fastmcp>=4.1
+# Problem 5: agent team. The slim package with only the OpenAI extra (used through Portkey);
+# the full pydantic-ai package pulls in many providers the project does not need.
+pydantic-ai-slim[openai]>=2.65
+python-dotenv>=1.2
+# Problem 7: backend API (backend/main.py), started with `uvicorn main:app --reload --port 8000`.
+fastapi>=0.115
+uvicorn>=0.30
+# Only for tests/check_api.py (FastAPI's TestClient needs it).
+httpx>=0.27

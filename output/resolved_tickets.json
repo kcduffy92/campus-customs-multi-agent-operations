@@ -1,0 +1,482 @@
+{
+  "generated_from": {
+    "audit_trail": "output/audit_trail.json",
+    "audit_entries": [
+      40,
+      240
+    ],
+    "database": "data/campus_customs_new.db (read-only)",
+    "as_of": "2026-11-05T00:25:52.289+00:00"
+  },
+  "resolution_types": {
+    "operational": "The real-world outcome has happened (the rent payment completes ticket 102).",
+    "administrative": "The desk's work is done and a person closed the ticket, but outside steps are still outstanding."
+  },
+  "simulation_policy": "Discounts follow the simulation discount policy, an assumption for this exercise and not a rule in the database: 10+ unit orders, up to 10% off list, above cost, only on stock on hand.",
+  "reset": {
+    "audit_entry": 40,
+    "time": "2026-11-04T23:58:09.875+00:00",
+    "by": "Kate Duffy"
+  },
+  "cash": {
+    "starting_balance": 3400.0,
+    "total_paid": 3240.0,
+    "ending_balance": 160.0,
+    "cash_accounts_balance": 160.0,
+    "reconciled": true
+  },
+  "model": {
+    "requested": [
+      "gpt-6-luna"
+    ],
+    "reported_by_responses": [
+      "gpt-6-luna-global"
+    ]
+  },
+  "tickets": [
+    {
+      "id": 101,
+      "mission": "Operation Missing Tee",
+      "type": "customer_order",
+      "requester": "Tauhid Zaman",
+      "subject": "Bulldog tee",
+      "final_status": "resolved",
+      "resolution_type": "administrative",
+      "resolved_by": "Kate Duffy",
+      "resolved_at": "2026-11-05T00:10:34.669+00:00",
+      "resolution_audit_entry": 140,
+      "resolution_note": "Marked resolved by Kate Duffy (administrative resolution) in the dashboard: Administrative resolution: Inventory confirmed that the size S tee is out of stock. The $840 rush reprint invoice was paid with human approval, and no duplicate purchase was made. Customer Service drafted a response, but it was not sent because it included confidential internal payment information and needs revision. The reprint has not been confirmed as shipped or delivered. Outstanding steps include confirming shipment with the supplier, getting the tee to the customer, and sending an approved, corrected response.",
+      "outcome": "The size S tee was out of stock (0 on hand). Invoice 501 ($840.00, \"Rush reprint CC-TEE-WHITE S\") was paid as payment 2 after Kate Duffy approved request #2; no duplicate purchase was made. Shipment and delivery of the reprint are not confirmed, and the customer reply was drafted but not sent. Resolved administratively.",
+      "boss_called_first": "Inventory (Crash)",
+      "agents": [
+        {
+          "agent": "boss",
+          "character": "Mario",
+          "role": "Boss",
+          "contribution": "Read ticket 101, then delegated to Inventory to verify stock and supplier blocker, and Customer Service to draft a fact-based reply. Inventory found no size S available and reported that overdue invoice 501 blocks the vendor from shipping. Accounting, contacted through Inventory, filed payment request 2 for human approval; no payment or shipment is confirmed. Ticket is recorded as awaiting_approval.",
+          "mcp_tools": [
+            "get_ticket",
+            "update_ticket"
+          ]
+        },
+        {
+          "agent": "inventory",
+          "character": "Crash",
+          "role": "Inventory",
+          "contribution": "The customer order cannot be filled from current stock: CC-TEE-WHITE size S has 0 on hand, so 1 is short; the listed location is Aisle B. List price is $28.00 and unit cost is $8.00. Invoice 501 is open and 3 days overdue, and Bulldog Print Co is blocked from shipping; its listed lead-time estimate is 5 days. The invoice description is a Rush reprint of CC-TEE-WHITE S, so this appears to cover the needed item—do not place a duplicate purchase. Accounting queued an $840 payment request for human approval to address the vendor block. Payment has not occurred, and shipment/delivery is unconfirmed. The vendor's specialty and invoice description do not independently confirm that a reprint has shipped.",
+          "mcp_tools": [
+            "list_vendors",
+            "check_stock_and_pricing",
+            "get_vendor_invoice_status"
+          ]
+        },
+        {
+          "agent": "accounting",
+          "character": "Spyro",
+          "role": "Accounting",
+          "contribution": "Verified invoice 501 is open and overdue, confirmed Bulldog Print Co is blocked from shipping, and checked that checking had enough available cash. Queued one $840 invoice-payment request for human approval (request ID 2); no duplicate purchase was placed. Checking was $1,000 before the request and would be $160 after all pending requests are approved. Payment has not occurred, and payment alone does not confirm shipment.",
+          "mcp_tools": [
+            "list_approval_requests",
+            "get_vendor_invoice_status",
+            "get_cash_balance",
+            "request_invoice_payment"
+          ]
+        },
+        {
+          "agent": "customer_service",
+          "character": "Sonic",
+          "role": "Customer Service",
+          "contribution": "Draft explains that no size S is in stock and gives the $28 list price. It clarifies that the reprint, payment, and shipment are not confirmed, that the invoice/payment approval and shipping block still need resolution, and that the 5-day estimate is not a promise of delivery timing.",
+          "mcp_tools": [
+            "get_ticket",
+            "check_stock_and_pricing"
+          ]
+        }
+      ],
+      "agents_not_involved": [
+        "Facilities (Ryu)"
+      ],
+      "delegations": [
+        {
+          "from": "Mario (Boss)",
+          "to": "Crash (Inventory)",
+          "outcome": "completed",
+          "audit_entry": 90
+        },
+        {
+          "from": "Crash (Inventory)",
+          "to": "Spyro (Accounting)",
+          "outcome": "completed",
+          "audit_entry": 99
+        },
+        {
+          "from": "Mario (Boss)",
+          "to": "Sonic (Customer Service)",
+          "outcome": "completed",
+          "audit_entry": 119
+        }
+      ],
+      "human_approvals": [
+        {
+          "request_id": 2,
+          "kind": "invoice_payment",
+          "sku": null,
+          "quantity": null,
+          "unit_price": null,
+          "amount": 840.0,
+          "cash_effect": -840.0,
+          "requested_by": "accounting",
+          "requested_at": "2026-11-05T00:04:52+00:00",
+          "status": "executed",
+          "decided_by": "Kate Duffy",
+          "decided_at": "2026-11-05T00:08:05+00:00",
+          "payment_id": 2,
+          "reason": "Pay open overdue invoice for the indicated rush reprint and remove Bulldog Print Co's shipping block; no duplicate purchase requested."
+        }
+      ],
+      "payments": [
+        {
+          "payment_id": 2,
+          "kind": "invoice",
+          "ref_id": 501,
+          "amount": 840.0,
+          "account": "checking",
+          "approved_by": "Kate Duffy"
+        }
+      ],
+      "customer_reply_draft": {
+        "text": "Hi Tauhid,\n\nWe don’t currently have the Classic Bulldog Tee in size S available; the list price is $28. The requested rush reprint is not confirmed: invoice 501 is open and overdue, and a payment request is awaiting human approval. The printer is blocked from shipping until the invoice is addressed. Although the listed lead-time estimate is 5 days, shipment and delivery are unconfirmed, so we can’t promise timing. No order, payment, or shipment is confirmed yet. We’ll share an update once we can confirm next steps.\n\nBest,\nCampus Customs",
+        "sent": false,
+        "issue": "The draft mentions \"invoice 501\", \"awaiting human approval\", \"blocked from shipping\": internal details that Customer Service's prompt says to keep out of customer replies. It must be edited before sending."
+      },
+      "outstanding": [
+        "Bulldog Print Co shipping the rush reprint (not confirmed; the 5-day lead time is an estimate)",
+        "The size S tee reaching the customer",
+        "Editing and sending the customer reply (the draft was not sent)"
+      ],
+      "expected_vs_actual": {
+        "boss_called_first_matches": true,
+        "routes_matched": [
+          "Mario → Crash",
+          "Crash → Spyro",
+          "Mario → Sonic"
+        ],
+        "routes_planned_not_used": [],
+        "routes_not_in_plan": [],
+        "tools_expected_not_used": [],
+        "tools_used_not_expected": [
+          "list_vendors"
+        ]
+      },
+      "runs": [
+        {
+          "run_id": "03057176-6f60-4a57-ab7a-b57518f57f63",
+          "audit_entries": [
+            83,
+            137
+          ],
+          "status": "completed",
+          "usage": {
+            "requests": 14,
+            "tool_calls": 14,
+            "input_tokens": 32338,
+            "output_tokens": 3829,
+            "total_tokens": 36167
+          },
+          "superseded": false
+        }
+      ],
+      "findings": [
+        "Customer Service's draft reply disclosed internal invoice and approval details, which its prompt forbids (audit entry 129). It was not sent. Kate Duffy chose to record the issue, not re-run the ticket."
+      ]
+    },
+    {
+      "id": 102,
+      "mission": "Operation Keep the Lights On",
+      "type": "rent_notice",
+      "requester": "Elm City Properties",
+      "subject": "Rent due",
+      "final_status": "resolved",
+      "resolution_type": "operational",
+      "resolved_by": "Kate Duffy",
+      "resolved_at": "2026-11-05T00:02:39.319+00:00",
+      "resolution_audit_entry": 82,
+      "resolution_note": "Kate Duffy approved approval request 1 in the dashboard. Rent of $2,400.00 recorded as payment 1; lease next due 2026-10-02. Nothing else outstanding.",
+      "outcome": "The rent notice matched lease 1 (Elm City Properties, $2,400.00 due 2026-09-02). Kate Duffy approved request #1; it was paid as payment 1, and the lease is next due 2026-10-02. Resolved operationally: the recorded payment completes the ticket.",
+      "boss_called_first": "Facilities (Ryu)",
+      "agents": [
+        {
+          "agent": "boss",
+          "character": "Mario",
+          "role": "Boss",
+          "contribution": "Facilities checked ticket 102 against lease 1 and confirmed the rent notice matches. Accounting filed payment request #1; it is pending human approval, and no payment has been made. Updated the ticket to awaiting_approval.",
+          "mcp_tools": [
+            "get_ticket",
+            "update_ticket"
+          ]
+        },
+        {
+          "agent": "accounting",
+          "character": "Spyro",
+          "role": "Accounting",
+          "contribution": "Confirmed lease 1 is for Elm City Properties, with $2,400 rent due 2026-09-02, matching the notice. Checking had $3,400 available before pending requests. Filed rent payment request #1 for $2,400; it is pending human approval and no money has moved. If approved, checking would have $1,000 remaining.",
+          "mcp_tools": [
+            "list_approval_requests",
+            "check_rent_due",
+            "get_cash_balance",
+            "request_rent_payment"
+          ]
+        },
+        {
+          "agent": "facilities",
+          "character": "Ryu",
+          "role": "Facilities",
+          "contribution": "The notice matches lease 1: requester Elm City Properties matches the landlord, and it says rent is due in 2 days, matching the lease due date of 2026-09-02. Rent is $2,400 and is urgent because it is due in two days. Accounting filed rent payment request #1 and confirmed checking covers it; payment is pending human approval, and no money has moved.",
+          "mcp_tools": [
+            "get_ticket",
+            "check_rent_due"
+          ]
+        }
+      ],
+      "agents_not_involved": [
+        "Inventory (Crash)",
+        "Customer Service (Sonic)"
+      ],
+      "delegations": [
+        {
+          "from": "Mario (Boss)",
+          "to": "Ryu (Facilities)",
+          "outcome": "completed",
+          "audit_entry": 48
+        },
+        {
+          "from": "Ryu (Facilities)",
+          "to": "Spyro (Accounting)",
+          "outcome": "completed",
+          "audit_entry": 56
+        }
+      ],
+      "human_approvals": [
+        {
+          "request_id": 1,
+          "kind": "rent_payment",
+          "sku": null,
+          "quantity": null,
+          "unit_price": null,
+          "amount": 2400.0,
+          "cash_effect": -2400.0,
+          "requested_by": "accounting",
+          "requested_at": "2026-11-05T00:00:07+00:00",
+          "status": "executed",
+          "decided_by": "Kate Duffy",
+          "decided_at": "2026-11-05T00:02:39+00:00",
+          "payment_id": 1,
+          "reason": "Rent for Chapel Street shop due 2026-09-02; lease details match the notice and checking can cover the payment."
+        }
+      ],
+      "payments": [
+        {
+          "payment_id": 1,
+          "kind": "rent",
+          "ref_id": 1,
+          "amount": 2400.0,
+          "account": "checking",
+          "approved_by": "Kate Duffy"
+        }
+      ],
+      "customer_reply_draft": null,
+      "outstanding": [],
+      "expected_vs_actual": {
+        "boss_called_first_matches": true,
+        "routes_matched": [
+          "Mario → Ryu",
+          "Ryu → Spyro"
+        ],
+        "routes_planned_not_used": [],
+        "routes_not_in_plan": [],
+        "tools_expected_not_used": [],
+        "tools_used_not_expected": []
+      },
+      "runs": [
+        {
+          "run_id": "6ec4e412-726a-427a-8a26-5c2a9bd5b21e",
+          "audit_entries": [
+            41,
+            80
+          ],
+          "status": "completed",
+          "usage": {
+            "requests": 10,
+            "tool_calls": 10,
+            "input_tokens": 21167,
+            "output_tokens": 1605,
+            "total_tokens": 22772
+          },
+          "superseded": false
+        }
+      ],
+      "findings": []
+    },
+    {
+      "id": 103,
+      "mission": "Operation Hoodie Negotiation",
+      "type": "price_override",
+      "requester": "Yale AI Club",
+      "subject": "Bulk hoodie discount",
+      "final_status": "resolved",
+      "resolution_type": "administrative",
+      "resolved_by": "Kate Duffy",
+      "resolved_at": "2026-11-05T00:25:52.289+00:00",
+      "resolution_audit_entry": 240,
+      "resolution_note": "Marked resolved by Kate Duffy (administrative resolution) in the dashboard: Administrative resolution. Inventory confirmed 8 of the 20 requested CC-HOOD-NAVY size M hoodies on hand; 12 are short. Under the simulation discount policy, a discount of 8 at $52.20 each (10% off list, $417.60) was approved by Kate Duffy as an offer; no cash moved. Customer Service drafted a reply, which was not sent. Outstanding: the club accepting the offer, a confirmed supplier and supply for the remaining 12, and sending the reply. A first run filed no discount request; it was re-run after a prompt fix.",
+      "outcome": "8 of 20 CC-HOOD-NAVY size M were on hand, 12 short. Under the simulation discount policy, Kate Duffy approved request #3: 8 at $52.20 (10% off $58.00, total $417.60) as an offer. No cash moved and no purchase was requested. The club has not accepted, supply for the other 12 is unconfirmed, and the reply was drafted but not sent. Resolved administratively after a re-run.",
+      "boss_called_first": "Inventory (Crash)",
+      "agents": [
+        {
+          "agent": "boss",
+          "character": "Mario",
+          "role": "Boss",
+          "contribution": "Worked ticket 103 as a price override. Inventory verified unit cost/list price and confirmed 8 of the 20 requested hoodies are on hand; supplier availability for the remaining 12 is unconfirmed. Accounting filed discount approval request #3 for the 8 available units at $52.20 each; human approval is pending. Customer Service drafted a reply that does not promise the discount or order. Ticket set to awaiting_approval.",
+          "mcp_tools": [
+            "get_ticket",
+            "update_ticket"
+          ]
+        },
+        {
+          "agent": "inventory",
+          "character": "Crash",
+          "role": "Inventory",
+          "contribution": "Pricing is verified for CC-HOOD-NAVY size M: unit cost $22.00 and list price $58.00. The ticket note says the 20-unit order has 8 on hand and is 12 short. The stock/pricing tool was called with requested_quantity=12 and returned 8 on hand and a shortage of 4 because it treats 12 as the total requested quantity; that does not change the ticket note's stated 12-unit shortage for a total order of 20. Supplier ability to provide the missing 12 is unconfirmed: Bulldog Print Co is a possible apparel-reprint supplier, has an estimated 5-day lead time, no open invoices listed, and is not blocked from shipping. The vendor data does not confirm it supplies this SKU or has the 12 units available.",
+          "mcp_tools": [
+            "check_stock_and_pricing",
+            "list_vendors"
+          ]
+        },
+        {
+          "agent": "accounting",
+          "character": "Spyro",
+          "role": "Accounting",
+          "contribution": "The 20-unit order qualifies for consideration under the simulation discount policy. Filed discount approval request #3 for the 8 units confirmed on hand at $52.20 each (10% off $58.00 list), leaving $30.20 margin per unit. The request is pending human approval; no price change or money movement has occurred. Checking was $160.00 with $0.00 already pending, and the discount request has a $0.00 cash effect, leaving $160.00 available. The remaining 12 units are unconfirmed and are not included in the discount request.",
+          "mcp_tools": [
+            "list_approval_requests",
+            "get_cash_balance",
+            "request_discount"
+          ]
+        },
+        {
+          "agent": "customer_service",
+          "character": "Sonic",
+          "role": "Customer Service",
+          "contribution": "Draft tells Yale AI Club that 8 size M hoodies are currently on hand, the other 12 have unconfirmed supplier availability, and the requested discount for the available 8 is still pending. It avoids presenting either the order or discount as confirmed.",
+          "mcp_tools": [
+            "get_ticket"
+          ]
+        }
+      ],
+      "agents_not_involved": [
+        "Facilities (Ryu)"
+      ],
+      "delegations": [
+        {
+          "from": "Mario (Boss)",
+          "to": "Crash (Inventory)",
+          "outcome": "completed",
+          "audit_entry": 195
+        },
+        {
+          "from": "Mario (Boss)",
+          "to": "Spyro (Accounting)",
+          "outcome": "completed",
+          "audit_entry": 207
+        },
+        {
+          "from": "Mario (Boss)",
+          "to": "Sonic (Customer Service)",
+          "outcome": "completed",
+          "audit_entry": 222
+        }
+      ],
+      "human_approvals": [
+        {
+          "request_id": 3,
+          "kind": "discount",
+          "sku": "CC-HOOD-NAVY",
+          "quantity": 8,
+          "unit_price": 52.2,
+          "amount": 417.6,
+          "cash_effect": 0.0,
+          "requested_by": "accounting",
+          "requested_at": "2026-11-05T00:23:26+00:00",
+          "status": "executed",
+          "decided_by": "Kate Duffy",
+          "decided_at": "2026-11-05T00:24:07+00:00",
+          "payment_id": null,
+          "reason": "Ticket order is 20 units, qualifying as a group order under the simulation discount policy. Request the maximum 10% off the $58.00 list price ($52.20) only for the 8 units confirmed on hand; the remaining 12 are unconfirmed. Unit cost is $22.00, leaving $30.20 margin per unit."
+        }
+      ],
+      "payments": [],
+      "customer_reply_draft": {
+        "text": "Hello Yale AI Club,\n\nWe currently have 8 CC-HOOD-NAVY hoodies in size M on hand. The remaining 12 are short, and supplier availability has not been confirmed. A group discount has been requested for the 8 available hoodies, but it is still awaiting approval, so neither the discount nor an order is confirmed. We’ll confirm the next steps once we have an update on the approval and supply. If helpful, let us know whether you’d like to discuss the 8 currently on hand or alternatives.\n\nBest,\nCampus Customs",
+        "sent": false,
+        "issue": null
+      },
+      "outstanding": [
+        "The Yale AI Club accepting (or declining) the offer for 8 hoodies",
+        "A confirmed supplier and supply for the 12-unit shortfall (no vendor-to-SKU record exists)",
+        "Sending the customer reply (the draft was not sent)"
+      ],
+      "expected_vs_actual": {
+        "boss_called_first_matches": true,
+        "routes_matched": [
+          "Mario → Crash",
+          "Mario → Spyro",
+          "Mario → Sonic"
+        ],
+        "routes_planned_not_used": [],
+        "routes_not_in_plan": [],
+        "tools_expected_not_used": [],
+        "tools_used_not_expected": []
+      },
+      "runs": [
+        {
+          "run_id": "19a437e6-c7e8-4c07-bd21-2ead10e536b0",
+          "audit_entries": [
+            141,
+            187
+          ],
+          "status": "completed",
+          "usage": {
+            "requests": 12,
+            "tool_calls": 10,
+            "input_tokens": 27753,
+            "output_tokens": 3635,
+            "total_tokens": 31388
+          },
+          "superseded": true
+        },
+        {
+          "run_id": "901913e1-3382-45a4-bf5a-5dcfa97b0e9f",
+          "audit_entries": [
+            188,
+            237
+          ],
+          "status": "completed",
+          "usage": {
+            "requests": 13,
+            "tool_calls": 11,
+            "input_tokens": 34464,
+            "output_tokens": 3881,
+            "total_tokens": 38345
+          },
+          "superseded": false
+        }
+      ],
+      "findings": [
+        "First run (audit entries 141–187) filed no discount request. Mario asked whether a request could be filed without a customer-proposed price, and Accounting declined to propose one.",
+        "In the first run, Accounting looked up the stock with sku \"hoodie\" instead of CC-HOOD-NAVY and got not-found (audit entry 165).",
+        "After a targeted prompt fix (Boss: Accounting proposes the price; Accounting: propose within policy, use exact SKUs), the second run (audit entries 188–237) filed discount request #3 within policy, using the exact SKU.",
+        "In the second run, Mario told Inventory to rely on the previous run's ticket note, and Inventory passed requested_quantity 12 instead of 20 (audit entry 199). Inventory explained the mismatch, and the final figures are correct."
+      ]
+    }
+  ]
+}

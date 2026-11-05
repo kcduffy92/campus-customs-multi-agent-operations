@@ -1,0 +1,63 @@
+# ---- Secrets and credentials ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ---- Data ----
+# Problem 11 requires both databases in the repository: the untouched original and the final working
+# copy (state after the Problem 9 run). Everything else in data/ (the course ZIP archive) and any
+# other or temporary database file stays local.
+data/*
+!data/campus_customs.db
+!data/campus_customs_new.db
+*.db
+!data/campus_customs.db
+!data/campus_customs_new.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+*.resetting
+*.zip
+
+# ---- Python ----
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---- Node / frontend build ----
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Logs, OS and editor files ----
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# ---- Local AI-assistant workspace settings (not part of the graded application) ----
+.claude/
+CLAUDE.md
+
+# Submission evidence (AI_prompts.md, README.md, output/, docs/ screenshots, both databases) is intentionally NOT ignored.

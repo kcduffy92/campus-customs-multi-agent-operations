@@ -1,0 +1,166 @@
+{
+  "recorded_at": "2026-11-03T19:46:57+00:00",
+  "ticket_id": 102,
+  "model": "gpt-6-luna",
+  "mcp_server": "http://127.0.0.1:64737/mcp",
+  "database": "temporary copy of data/campus_customs.db (deleted after the run)",
+  "seconds": 34.6,
+  "result": {
+    "run_id": "fa8b63df-04b7-4e7c-918b-785ff132b434",
+    "ticket_id": 102,
+    "model": "gpt-6-luna",
+    "status": "completed",
+    "final_report": {
+      "agent": "boss",
+      "summary": "Facilities checked ticket 102 against lease 1 and confirmed the notice matches. Accounting filed the rent payment request; the ticket is awaiting human approval. No payment has been made.",
+      "facts": [
+        {
+          "source_tool": "get_ticket",
+          "detail": "Ticket 102 is a rent_notice from Elm City Properties; lease_id 1; note says rent is due in 2 days. desk date: 2026-08-31."
+        },
+        {
+          "source_tool": "facilities",
+          "detail": "Lease 1 lists Elm City Properties as landlord and monthly rent of $2,400.00, due 2026-09-02. The notice matches; it is not overdue."
+        },
+        {
+          "source_tool": "facilities",
+          "detail": "Checking balance $3,400.00; balance after rent would be $1,000.00."
+        },
+        {
+          "source_tool": "facilities",
+          "detail": "Accounting filed rent_payment approval request ID 1 for $2,400.00 due 2026-09-02; status pending. No money has moved."
+        },
+        {
+          "source_tool": "update_ticket",
+          "detail": "Ticket 102 status updated from open to awaiting_approval."
+        }
+      ],
+      "approval_request_ids": [
+        1
+      ],
+      "customer_reply": null,
+      "recommended_ticket_status": "awaiting_approval",
+      "open_issues": [
+        "Human approval is required before the rent payment is made."
+      ]
+    },
+    "delegations": [
+      {
+        "from_agent": "facilities",
+        "to_agent": "accounting",
+        "depth": 2,
+        "task": "Queue the rent payment for lease 1 on ticket 102. Confirmed lease amount is $2,400.00, due 2026-09-02. Please confirm the cash position as well.",
+        "outcome": "completed",
+        "note": null
+      },
+      {
+        "from_agent": "boss",
+        "to_agent": "facilities",
+        "depth": 1,
+        "task": "For ticket 102, check rent notice against lease ID 1. Report lease terms, notice validity/amount/due date as tools confirm, and whether Accounting needs to queue payment.",
+        "outcome": "completed",
+        "note": null
+      }
+    ],
+    "usage": {
+      "requests": 10,
+      "tool_calls": 10,
+      "input_tokens": 19289,
+      "output_tokens": 1648,
+      "total_tokens": 20937
+    },
+    "error": null
+  },
+  "agents_that_ran": [
+    "accounting",
+    "boss",
+    "facilities"
+  ],
+  "models_reported_by_responses": [
+    "gpt-6-luna-global"
+  ],
+  "mcp_tool_calls": [
+    {
+      "agent": "boss",
+      "tool": "get_ticket",
+      "args": {
+        "ticket_id": 102
+      }
+    },
+    {
+      "agent": "facilities",
+      "tool": "get_ticket",
+      "args": {
+        "ticket_id": 102
+      }
+    },
+    {
+      "agent": "facilities",
+      "tool": "check_rent_due",
+      "args": {
+        "lease_id": 1
+      }
+    },
+    {
+      "agent": "accounting",
+      "tool": "check_rent_due",
+      "args": {
+        "lease_id": 1
+      }
+    },
+    {
+      "agent": "accounting",
+      "tool": "get_cash_balance",
+      "args": {}
+    },
+    {
+      "agent": "accounting",
+      "tool": "list_approval_requests",
+      "args": {
+        "ticket_id": 102
+      }
+    },
+    {
+      "agent": "accounting",
+      "tool": "request_rent_payment",
+      "args": {
+        "ticket_id": 102,
+        "lease_id": 1,
+        "reason": "Rent for Chapel Street shop is due 2026-09-02; request payment of lease amount before due date.",
+        "requested_by": "accounting"
+      }
+    },
+    {
+      "agent": "boss",
+      "tool": "update_ticket",
+      "args": {
+        "ticket_id": 102,
+        "status": "awaiting_approval",
+        "note": "Facilities confirmed the $2,400 rent is due 2026-09-02 and matches the lease. Accounting filed rent payment request 1; awaiting human approval.",
+        "updated_by": "boss"
+      }
+    }
+  ],
+  "audit_entries_appended": 40,
+  "isolated_db_after_run": {
+    "ticket": {
+      "id": 102,
+      "status": "awaiting_approval",
+      "notes": "Email: shop rent due in 2 days. | [2026-08-31 boss] Facilities confirmed the $2,400 rent is due 2026-09-02 and matches the lease. Accounting filed rent payment request 1; awaiting human approval."
+    },
+    "approval_requests": [
+      {
+        "id": 1,
+        "ticket_id": 102,
+        "kind": "rent_payment",
+        "ref_id": 1,
+        "amount": 2400.0,
+        "status": "pending",
+        "requested_by": "accounting"
+      }
+    ],
+    "checking_balance": 3400.0,
+    "payments_rows": 0
+  },
+  "original_and_working_db_unchanged": true
+}
